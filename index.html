@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Greg & Glop</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 200px;
+      height: 200px;
+      background: transparent;        /* lets Electron transparency show through */
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      cursor: grab;
+    }
+    canvas:active { cursor: grabbing; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="160" height="160"></canvas>
+
+  <script>
+    const sources = [
+      'assets/Group 5.png',
+      'assets/Group 6.png',
+      'assets/Group 7.png',
+      'assets/Group 8.png',
+      'assets/Group 9.png',
+      'assets/Group 10.png',
+    ];
+
+    const MAX_W = 806;
+    const MAX_H = 682;
+    const CANVAS_SIZE = 160;
+    const FRAME_DELAY = 150;
+    const scale = CANVAS_SIZE / Math.max(MAX_W, MAX_H);
+
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    const imgs = [];
+    let loaded = 0;
+
+    sources.forEach((src, i) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        loaded++;
+        if (loaded === sources.length) start();
+      };
+      imgs[i] = img;
+    });
+
+    const IDLE_FRAME = imgs.length - 1;  // Group 10 = last frame
+    let current = IDLE_FRAME;
+    let loopTimer = null;
+    let active = false;
+    let started = false;
+
+    function draw(i) {
+      const img = imgs[i];
+      const w = img.naturalWidth * scale;
+      const h = img.naturalHeight * scale;
+      const x = (CANVAS_SIZE - w) / 2;
+      const y = CANVAS_SIZE - h;
+
+      ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      ctx.drawImage(img, x, y, w, h);
+    }
+
+    function startLoop() {
+      if (active) return;
+      active = true;
+      current = 0;
+
+      function next() {
+        if (!active) return;
+        const delay = FRAME_DELAY;
+        draw(current);
+        current = (current + 1) % imgs.length;
+        loopTimer = setTimeout(next, delay);
+      }
+      next();
+    }
+
+    function stopLoop() {
+      active = false;
+      clearTimeout(loopTimer);
+      loopTimer = null;
+      current = IDLE_FRAME;
+      draw(IDLE_FRAME);
+    }
+
+    function start() {
+      if (started) return;
+      started = true;
+      draw(IDLE_FRAME);
+
+      canvas.addEventListener('mouseenter', startLoop);
+      canvas.addEventListener('mouseleave', stopLoop);
+      canvas.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        const offsetX = e.screenX - window.screenX;
+        const offsetY = e.screenY - window.screenY;
+
+        function onMove(e) {
+          window.electronAPI.moveWindow(e.screenX - offsetX, e.screenY - offsetY);
+        }
+        function onUp() {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "greg-and-glop",
+  "version": "1.0.0",
+  "description": "Floating desktop shrine for grep & glob",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^34.0.0"
+  }
+}

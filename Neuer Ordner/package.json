@@ -1,0 +1,19 @@
+{
+  "name": "greg",
+  "version": "1.0.0",
+  "description": "Floating Claude Code overlay for macOS",
+  "main": "main.js",
+  "scripts": {
+    "postinstall": "electron-rebuild -f -w node-pty",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "node-pty": "^1.0.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.6.0",
+    "electron": "^34.0.0"
+  }
+}

@@ -1,0 +1,4 @@
+node_modules/
+Neuer Ordner/node_modules/
+*.textClipping
+.DS_Store

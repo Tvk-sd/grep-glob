@@ -74,9 +74,14 @@ Glop today: **glob or plain name** from a **chosen search root**; results **grou
 
 ## Shrine shell (implemented)
 
-- **200×200** transparent window, **always on top**, draggable canvas; **right-click** → custom menu; **left-click** (no drag) → Terminal at `~/Projects`.
-- **Separate panels** to the right (blur closes them); Greg uses the dark **glass** panel; Glop uses a lighter inline panel.
-- **Tray** right-click opens the same menu; **login item** optional.
+- **Shrine window:** **200×200** when collapsed (transparent, **always on top**). **Right-click** the canvas (or **tray** right-click) opens the **custom context menu** to the right of the shrine’s **current** width (panels follow `getBounds().width`, not a fixed 208px offset).
+- **Left-drag** on the canvas moves the whole shrine (pointer capture + main `move-window` nudges open panels).
+- **Left tap** (no meaningful drag): expands the **same** `BrowserWindow` to about **560×420**, animates a slim **middle chrome bar** (drag strip + close **×**), and opens an **embedded** terminal (**xterm.js** in the renderer, **`node-pty`** in the main process) running **`claude`** with cwd **`~/Projects`**. Ending the session (**exit**, quitting Claude Code, or **×** / SIGTERM) disposes the PTY and **shrinks** the shrine back to 200×200. If `claude` is not on the Electron process **PATH**, spawn falls back to an interactive login shell in that directory (same cwd).
+- **Glop “Terminal in folder”** remains **macOS Terminal.app** via AppleScript (`openTerminalAtPath`) — only the shrine left-tap path is embedded.
+- **Context menu + Greg + Glop panels:** separate small windows, still **always on top**, positioned just right of the shrine. While you **drag the shrine**, open panels **stay visible** and **move with it** (main process nudges their position on each move). **Blur does not auto-dismiss** when focus simply lands on the shrine or back on the same panel—only after a tick, if focus is **elsewhere** (another app, etc.), so you can grab the shrine without the menu vanishing first.
+- **Moving the menu itself:** the context menu window uses a **native drag region** (`-webkit-app-region: drag` on the menu chrome; **no-drag** on rows and system controls) so you can reposition it from gutters / padding while rows stay clickable.
+- **After a drag:** the shrine tells main to **refocus** whichever panel was open so the next click on a menu row or list item still lands without an extra focus tap.
+- **Greg** uses the dark **glass** panel; **Glop** uses the minimal transparent panel. **Login item** optional.
 - Main process still exposes **projects.json** IPC for a future pinned-list jumper; the **current** Glop surface is glob search, not pin management.
 
 ---

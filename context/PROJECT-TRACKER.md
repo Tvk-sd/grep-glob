@@ -41,6 +41,7 @@ Rules that apply in every session — follow automatically, no instruction neede
 ### Done
 
 - Reliable Terminal cwd for `open-project` (AppleScript `cd` + fallback) — 2026-04-12
+- **Shrine embedded Claude terminal** — left-click expands the main window (~560×420), middle chrome bar + opaque xterm area; `node-pty` runs `claude` in `~/Projects` (fallback login shell if spawn fails); PTY exit or × closes session and shrinks back to 200×200; Greg/Glop/menu anchor uses live `getBounds().width` — 2026-04-12
 
 ---
 
@@ -54,12 +55,14 @@ Rules that apply in every session — follow automatically, no instruction neede
 
 **Prompt:** "Resume Greg & Glop. Read `CLAUDE.md` and `context/PROJECT-TRACKER.md`."
 
-**Bottom line:** Greg should **surface patterns**, not only answer “how many matches?” Treat the product as three related modes on one engine: **search** (string in mind), **sweep** (catalog of common signals in a tree), and **digest** (one headline finding, e.g. latest TODO). Sweeps and grouped hit lists teach the model; digest compresses the list. Shrine stays 200×200; value lives in panels and actions (list, copy, open-at-line).
+**Bottom line:** Greg should **surface patterns**, not only answer “how many matches?” Treat the product as three related modes on one engine: **search** (string in mind), **sweep** (catalog of common signals in a tree), and **digest** (one headline finding, e.g. latest TODO). Sweeps and grouped hit lists teach the model; digest compresses the list. Shrine **defaults** to 200×200 and **expands in-place** for the embedded Claude Code session; Greg/Glop panels still live beside the live window width. Value lives in panels and actions (list, copy, open-at-line) plus the in-shrine terminal.
 
 **Product metaphor:** **Greg (grep)** reads scrolls — search inside file contents (sprite frame Group 6). **Glop (glob)** walks the halls — paths and structure (Group 8). **Idle** Group 10; **loop** frames 5→10 on hover / activity states (`idle` / `grep` / `glob` / `searching` / `found` / `error` per `CLAUDE.md`).
 
-**Shipped baseline:** shrine + hover loop; left-click Terminal at `~/Projects`; tray right-click menu; Greg panel = tracker queue + open in editor; Glop panel = glob + copy path + Terminal in folder; blur-to-close panels; `run-grep` / badge path still in main for a future sweep UI. See `CLAUDE.md` for IPC.
+**Shipped baseline:** shrine + hover loop; **left-click** opens **embedded** Claude Code (`claude` via `node-pty` + xterm in the shrine window, cwd `~/Projects`); tray right-click menu; Greg panel = tracker queue + open in editor; Glop panel = glob + copy path + **external** Terminal in folder (`openTerminalAtPath`); blur-to-close panels; `run-grep` / badge path still in main for a future sweep UI. See `CLAUDE.md` for IPC.
 
 **Branches:** `main` = baseline shrine; active feature work may live on `features/v2` (or a v2 worktree). Prefer merging **to `main`** once polish items (menu centering/visuals, badge) are in good shape. File layout and IPC channels: `CLAUDE.md`.
 
-**Quick reference:** `npm start` from repo root; stack and IPC in `CLAUDE.md`; projects persist under app userData `projects.json`.
+**Quick reference:** `npm start` from repo root; stack and IPC in `CLAUDE.md`; projects persist under app userData `projects.json`. After `npm install`, `postinstall` runs `electron-rebuild` for `node-pty`.
+
+**Embedded terminal caveat:** `claude` must be on PATH for the **Electron** process (not only Terminal.app). If spawn fails, you get a login shell in `~/Projects` instead.

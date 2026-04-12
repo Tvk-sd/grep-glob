@@ -3,16 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <title>Greg & Glop</title>
+  <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 200px;
-      height: 200px;
+      width: 100%;
+      height: 100%;
       background: transparent;
       overflow: hidden;
+    }
+    body.shrunk {
+      width: 200px;
+      height: 200px;
+    }
+    body.expanded {
+      width: 100%;
+      height: 100%;
+    }
+    #column {
       display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+    body.shrunk #column {
       align-items: center;
       justify-content: center;
+    }
+    #shrineRow {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    body.expanded #shrineRow {
+      padding: 10px 0 6px;
+      -webkit-app-region: drag;
     }
     #wrapper {
       position: relative;
@@ -24,6 +50,7 @@
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       cursor: grab;
+      -webkit-app-region: no-drag;
     }
     canvas:active { cursor: grabbing; }
     #badge {
@@ -44,13 +71,95 @@
     }
     #badge.visible { opacity: 1; }
     #badge.error { color: #ff6b6b; border-color: rgba(255,107,107,0.4); }
+    #chromeBar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      overflow: hidden;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      background: rgba(12, 12, 12, 0.92);
+      transition: height 0.22s ease, opacity 0.18s ease, min-height 0.22s ease;
+    }
+    body.shrunk #chromeBar {
+      height: 0;
+      min-height: 0;
+      opacity: 0;
+      pointer-events: none;
+      border-top-color: transparent;
+    }
+    body.expanded #chromeBar {
+      height: 14px;
+      min-height: 14px;
+      opacity: 1;
+      pointer-events: auto;
+      -webkit-app-region: drag;
+    }
+    #closeTerm {
+      -webkit-app-region: no-drag;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.75);
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 4px;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    #closeTerm:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.1);
+    }
+    #terminalWrap {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: #1e1e1e;
+      transition: flex 0.22s ease, opacity 0.2s ease;
+    }
+    body.shrunk #terminalWrap {
+      flex: 0 0 0;
+      height: 0;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    body.expanded #terminalWrap {
+      flex: 1 1 auto;
+      opacity: 1;
+      pointer-events: auto;
+      overflow: hidden;
+    }
+    #terminal {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 4px 6px 8px;
+    }
+    body.expanded #terminal .xterm {
+      height: 100%;
+    }
   </style>
 </head>
-<body>
-  <div id="wrapper">
-    <canvas id="c" width="160" height="160"></canvas>
-    <div id="badge"></div>
+<body class="shrunk">
+  <div id="column">
+    <div id="shrineRow">
+      <div id="wrapper">
+        <canvas id="c" width="160" height="160"></canvas>
+        <div id="badge"></div>
+      </div>
+    </div>
+    <div id="chromeBar">
+      <button type="button" id="closeTerm" aria-label="Close terminal">×</button>
+    </div>
+    <div id="terminalWrap">
+      <div id="terminal"></div>
+    </div>
   </div>
+
+  <script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="shrine-terminal.js"></script>
 
   <script>
     const sources = [
@@ -80,12 +189,10 @@
       imgs[i] = img;
     });
 
-    // ── Animation state ───────────────────────────────────────────────────────
-
     let loopTimer  = null;
     let active     = false;
     let started    = false;
-    let lockedFrame = null;   // non-null: external state holds this frame
+    let lockedFrame = null;
     let badgeTimer = null;
     let current    = FRAME.idle;
 
@@ -138,8 +245,6 @@
       setTimeout(() => draw(base), 100);
     }
 
-    // ── Shrine state from main process ────────────────────────────────────────
-
     window.electronAPI.onShrineState((state) => {
       if      (state === 'idle')      unlock();
       else if (state === 'grep')      lockFrame(FRAME.grep);
@@ -160,12 +265,13 @@
       }, 8000);
     });
 
-    // ── Input ─────────────────────────────────────────────────────────────────
-
     function start() {
       if (started) return;
       started = true;
       draw(FRAME.idle);
+      if (typeof window.initShrineTerminalBridge === 'function') {
+        window.initShrineTerminalBridge();
+      }
 
       canvas.addEventListener('mouseenter', startLoop);
       canvas.addEventListener('mouseleave', stopLoop);
@@ -193,6 +299,7 @@
         function onUp() {
           document.removeEventListener('mousemove', onMove);
           document.removeEventListener('mouseup', onUp);
+          if (dragged) window.electronAPI.shrineDragEnded(true);
           if (!dragged) {
             if (lockedFrame === null) pulse();
             window.electronAPI.openTerminal();

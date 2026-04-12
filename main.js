@@ -3,6 +3,7 @@ const path = require('path')
 const { spawn, execFile } = require('child_process')
 const { homedir } = require('os')
 const fs = require('fs')
+const pty = require('node-pty')
 
 const PROJECTS_FILE = path.join(app.getPath('userData'), 'projects.json')
 const TRACKER_SCAN_ROOT_FILE = path.join(app.getPath('userData'), 'tracker-scan-root.txt')
@@ -249,6 +250,67 @@ let grepWin = null
 let projectsWin = null
 let grepBlurIgnoreUntil = 0
 
+/** Embedded Claude terminal (shrine window). */
+let shrinePty = null
+
+const SHRINE_COLLAPSED_W = 200
+const SHRINE_COLLAPSED_H = 200
+const SHRINE_EXPANDED_W = 560
+const SHRINE_EXPANDED_H = 420
+
+function shrinePanelAnchorX() {
+  if (!win || win.isDestroyed()) return SHRINE_COLLAPSED_W
+  return win.getBounds().width
+}
+
+/**
+ * Keep the window's horizontal center and top edge stable when resizing.
+ * The shrine is flex-centered in the window; pinning only top-left made the sprite
+ * slide right as width grew. Growing around the same center keeps the sprite fixed;
+ * the terminal sits centered under it.
+ */
+function clampShrineWindowX(left, width, centerY) {
+  const pt = { x: Math.round(left + width / 2), y: Math.round(centerY) }
+  const display = screen.getDisplayNearestPoint(pt)
+  const wa = display.workArea
+  const maxLeft = wa.x + wa.width - width
+  if (left < wa.x) return wa.x
+  if (left > maxLeft) return Math.max(wa.x, maxLeft)
+  return left
+}
+
+function expandShrineWindow() {
+  if (!win || win.isDestroyed()) return
+  const b = win.getBounds()
+  const cx = b.x + b.width / 2
+  const top = b.y
+  let nx = Math.round(cx - SHRINE_EXPANDED_W / 2)
+  nx = clampShrineWindowX(nx, SHRINE_EXPANDED_W, top + b.height / 2)
+  win.setBounds({ x: nx, y: top, width: SHRINE_EXPANDED_W, height: SHRINE_EXPANDED_H })
+}
+
+function collapseShrineWindow() {
+  if (!win || win.isDestroyed()) return
+  const b = win.getBounds()
+  const cx = b.x + b.width / 2
+  const top = b.y
+  let nx = Math.round(cx - SHRINE_COLLAPSED_W / 2)
+  nx = clampShrineWindowX(nx, SHRINE_COLLAPSED_W, top + b.height / 2)
+  win.setBounds({ x: nx, y: top, width: SHRINE_COLLAPSED_W, height: SHRINE_COLLAPSED_H })
+}
+
+function attachShrinePtyHandlers(proc) {
+  proc.onData((data) => {
+    if (!win.isDestroyed()) win.webContents.send('terminal-output', data)
+  })
+  proc.onExit(() => {
+    shrinePty = null
+    if (!win.isDestroyed()) {
+      win.webContents.send('terminal-closed')
+      collapseShrineWindow()
+    }
+  })
+}
 // ── Projects persistence ──────────────────────────────────────────────────────
 
 function readProjects() {
@@ -282,6 +344,21 @@ function panelConfig(width, height, x, y) {
 function shrinePos() {
   const [x, y] = win.getPosition()
   return { x, y }
+}
+
+/** Blur fires before focus settles on the shrine; defer and only dismiss when focus is not our shrine or this panel (so dragging / working from the shrine keeps panels open). */
+function attachDeferredBlurClose(panelWin, opts = {}) {
+  const { extraStayOpen } = opts
+  panelWin.on('blur', () => {
+    const w = panelWin
+    setImmediate(() => {
+      if (!w || w.isDestroyed()) return
+      if (typeof extraStayOpen === 'function' && extraStayOpen()) return
+      const focused = BrowserWindow.getFocusedWindow()
+      if (focused === w || focused === win) return
+      w.close()
+    })
+  })
 }
 
 function setShrineState(state) {
@@ -342,9 +419,10 @@ function createContextMenuWin() {
   closeAllPanels()
   const { x, y } = shrinePos()
   const menuW = 220, menuH = 132
-  const display = screen.getDisplayNearestPoint({ x, y })
-  const menuX = x + 200 + 8
-  const menuY = y + Math.round((200 - menuH) / 2)
+  const bw = shrinePanelAnchorX()
+  const bh = win && !win.isDestroyed() ? win.getBounds().height : SHRINE_COLLAPSED_H
+  const menuX = x + bw + 8
+  const menuY = y + Math.round((bh - menuH) / 2)
   contextMenuWin = new BrowserWindow(panelConfig(menuW, menuH, menuX, menuY))
   contextMenuWin.loadFile('context-menu.html')
   contextMenuWin.on('closed', () => {
@@ -354,7 +432,7 @@ function createContextMenuWin() {
       setShrineState('idle')
     })
   })
-  contextMenuWin.on('blur', () => { if (!contextMenuWin?.isDestroyed()) contextMenuWin.close() })
+  attachDeferredBlurClose(contextMenuWin)
 }
 
 function createGrepWin() {
@@ -362,7 +440,7 @@ function createGrepWin() {
   const { x, y } = shrinePos()
   const grepW = 300
   const grepH = 360
-  grepWin = new BrowserWindow(panelConfig(grepW, grepH, x + 208, y))
+  grepWin = new BrowserWindow(panelConfig(grepW, grepH, x + shrinePanelAnchorX() + 8, y))
   grepWin.loadFile('grep-panel.html')
   grepBlurIgnoreUntil = Date.now() + 500
   grepWin.webContents.once('did-finish-load', () => {
@@ -376,20 +454,19 @@ function createGrepWin() {
     setShrineState('idle')
   })
   grepWin.on('focus', () => setShrineState('grep'))
-  grepWin.on('blur', () => {
-    if (Date.now() < grepBlurIgnoreUntil) return
-    if (!grepWin?.isDestroyed()) grepWin.close()
+  attachDeferredBlurClose(grepWin, {
+    extraStayOpen: () => Date.now() < grepBlurIgnoreUntil
   })
 }
 
 function createProjectsWin() {
   closeAllPanels()
   const { x, y } = shrinePos()
-  projectsWin = new BrowserWindow(panelConfig(300, 360, x + 208, y))
+  projectsWin = new BrowserWindow(panelConfig(300, 360, x + shrinePanelAnchorX() + 8, y))
   projectsWin.loadFile('projects-panel.html')
   projectsWin.on('closed', () => { projectsWin = null; setShrineState('idle') })
   projectsWin.on('focus', () => setShrineState('glob'))
-  projectsWin.on('blur', () => { if (!projectsWin?.isDestroyed()) projectsWin.close() })
+  attachDeferredBlurClose(projectsWin)
 }
 
 // ── App setup ─────────────────────────────────────────────────────────────────
@@ -421,10 +498,85 @@ app.whenReady().then(() => {
 
 // ── IPC: shrine ───────────────────────────────────────────────────────────────
 
-ipcMain.on('move-window', (_e, x, y) => win.setPosition(x, y))
+ipcMain.on('move-window', (_e, x, y) => {
+  const [ox, oy] = win.getPosition()
+  const dx = x - ox
+  const dy = y - oy
+  win.setPosition(x, y)
+  if (dx === 0 && dy === 0) return
+  function nudgePanel(w) {
+    if (!w || w.isDestroyed()) return
+    const [wx, wy] = w.getPosition()
+    w.setPosition(wx + dx, wy + dy)
+  }
+  nudgePanel(contextMenuWin)
+  nudgePanel(grepWin)
+  nudgePanel(projectsWin)
+})
 
-ipcMain.on('open-terminal', () =>
-  openTerminalAtPath(path.join(homedir(), 'Projects'), { claude: true }))
+ipcMain.on('shrine-drag-ended', (_e, didDrag) => {
+  if (!didDrag) return
+  if (contextMenuWin && !contextMenuWin.isDestroyed()) contextMenuWin.focus()
+  else if (grepWin && !grepWin.isDestroyed()) grepWin.focus()
+  else if (projectsWin && !projectsWin.isDestroyed()) projectsWin.focus()
+})
+
+ipcMain.on('open-terminal', () => {
+  if (shrinePty || !win || win.isDestroyed()) return
+  closeAllPanels()
+  expandShrineWindow()
+  win.webContents.send('open-shrine-terminal')
+})
+
+ipcMain.handle('terminal-start', (_e, opts = {}) => {
+  if (shrinePty) return { ok: false, error: 'Session already active' }
+  const cols = Math.max(2, parseInt(String(opts.cols), 10) || 80)
+  const rows = Math.max(1, parseInt(String(opts.rows), 10) || 24)
+  const cwd = opts.cwd && String(opts.cwd).trim()
+    ? path.resolve(opts.cwd)
+    : path.join(homedir(), 'Projects')
+  const env = { ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' }
+  const spawnOpts = { name: 'xterm-256color', cols, rows, cwd, env }
+  try {
+    shrinePty = pty.spawn('claude', [], spawnOpts)
+  } catch {
+    try {
+      const shell = process.env.SHELL || '/bin/zsh'
+      shrinePty = pty.spawn(shell, ['-il'], spawnOpts)
+    } catch (e2) {
+      collapseShrineWindow()
+      return { ok: false, error: String(e2.message || e2) }
+    }
+  }
+  attachShrinePtyHandlers(shrinePty)
+  return { ok: true }
+})
+
+ipcMain.on('terminal-write', (_e, data) => {
+  if (shrinePty && typeof data === 'string') shrinePty.write(data)
+})
+
+ipcMain.on('terminal-resize', (_e, cols, rows) => {
+  if (!shrinePty) return
+  try {
+    shrinePty.resize(Math.max(2, parseInt(String(cols), 10) || 80), Math.max(1, parseInt(String(rows), 10) || 24))
+  } catch {
+    /* ignore */
+  }
+})
+
+ipcMain.on('terminal-kill', () => {
+  if (!shrinePty) return
+  try {
+    shrinePty.kill('SIGTERM')
+  } catch {
+    /* ignore */
+  }
+})
+
+ipcMain.on('shrine-collapsed', () => {
+  collapseShrineWindow()
+})
 
 ipcMain.on('open-context-menu', () => createContextMenuWin())
 

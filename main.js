@@ -59,6 +59,23 @@ function closeAllPanels() {
   projectsWin = null
 }
 
+/** Open Terminal with cwd set reliably (open -a Terminal <path> often ignores path if Terminal is already open). */
+function openTerminalAtPath(dirPath) {
+  const resolved = path.resolve(dirPath)
+  if (process.platform !== 'darwin') {
+    spawn('open', ['-a', 'Terminal', resolved])
+    return
+  }
+  const asLiteral = '"' + resolved.replace(/"/g, '""') + '"'
+  const source = `tell application "Terminal"
+  activate
+  do script "cd " & quoted form of ${asLiteral}
+end tell`
+  execFile('osascript', ['-e', source], (err) => {
+    if (err) spawn('open', ['-a', 'Terminal', resolved])
+  })
+}
+
 // ── Panel factories ───────────────────────────────────────────────────────────
 
 function createContextMenuWin() {
@@ -189,7 +206,7 @@ ipcMain.handle('remove-project', (_e, id) => {
 })
 
 ipcMain.on('open-project', (_e, dirPath) => {
-  spawn('open', ['-a', 'Terminal', dirPath])
+  if (typeof dirPath === 'string' && dirPath.length > 0) openTerminalAtPath(dirPath)
   closeAllPanels()
   setShrineState('idle')
 })

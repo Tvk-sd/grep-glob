@@ -34,6 +34,7 @@ npm start       # launch the shrine
 
 ## Documentation
 
-- [`CLAUDE.md`](./CLAUDE.md) — Technical context for AI coding sessions
-- [`AGENTS.md`](./AGENTS.md) — Agent-specific instructions and conventions
-- [`docs/`](./docs/) — Concept documentation and research
+- `[CLAUDE.md](./CLAUDE.md)` — Technical context for AI coding sessions
+- `[AGENTS.md](./AGENTS.md)` — Agent-specific instructions and conventions
+- `[docs/](./docs/)` — Concept documentation and research
+

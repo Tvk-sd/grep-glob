@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 300px; height: 130px; background: transparent; overflow: hidden; }
+    #panel {
+      margin: 6px;
+      background: rgba(18, 18, 18, 0.88);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 14px;
+      font-family: monospace;
+      color: #e8e8e8;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    input {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: #e8e8e8;
+      font-family: monospace;
+      font-size: 13px;
+      padding: 6px 10px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: rgba(255,255,255,0.3); }
+    input::placeholder { color: rgba(255,255,255,0.25); }
+    #dir-row { display: flex; align-items: center; gap: 8px; }
+    #dir-label {
+      font-size: 10px;
+      color: rgba(255,255,255,0.35);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color 0.1s;
+    }
+    #dir-label:hover { color: rgba(255,255,255,0.65); }
+    #status { font-size: 10px; color: rgba(255,255,255,0.35); }
+    #status.found { color: #7ed321; }
+    #status.error { color: #ff6b6b; }
+    #status.busy  { color: rgba(255,255,255,0.5); }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <input id="pattern" type="text" placeholder="pattern…" autocomplete="off" spellcheck="false" />
+    <div id="dir-row">
+      <span id="dir-label">loading…</span>
+      <span id="status"></span>
+    </div>
+  </div>
+
+  <script>
+    const patternInput = document.getElementById('pattern');
+    const dirLabel     = document.getElementById('dir-label');
+    const status       = document.getElementById('status');
+
+    let currentDir = '';
+
+    function shortenPath(p) {
+      return p.replace(/^\/Users\/[^/]+/, '~');
+    }
+
+    // Load default directory from main process
+    window.panelAPI.getDefaultDir().then(dir => {
+      currentDir = dir;
+      dirLabel.textContent = shortenPath(dir);
+      dirLabel.title = dir;
+    });
+
+    dirLabel.addEventListener('click', async () => {
+      const picked = await window.panelAPI.pickDirectory();
+      if (picked) {
+        currentDir = picked;
+        dirLabel.textContent = shortenPath(picked);
+        dirLabel.title = picked;
+      }
+    });
+
+    patternInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'Escape') { window.panelAPI.closePanel(); return; }
+      if (e.key !== 'Enter') return;
+
+      const pattern = patternInput.value.trim();
+      if (!pattern || !currentDir) return;
+
+      status.textContent = 'searching…';
+      status.className = 'busy';
+      patternInput.disabled = true;
+
+      const result = await window.panelAPI.runGrep(pattern, currentDir);
+      window.panelAPI.grepDone(result);
+
+      status.textContent = result.error
+        ? 'error'
+        : result.count === 0
+          ? 'no matches'
+          : `${result.count} match${result.count !== 1 ? 'es' : ''} · copied`;
+      status.className = result.error ? 'error' : result.count > 0 ? 'found' : '';
+
+      setTimeout(() => window.panelAPI.closePanel(), 1200);
+    });
+
+    patternInput.focus();
+  </script>
+</body>
+</html>

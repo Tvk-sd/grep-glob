@@ -1,9 +1,8 @@
-# Greg & Glop — Claude Code Project Instructions
+# Greg & Glop — Claude Session Context
 
-## What this project is
-A floating macOS desktop shrine for the bash commands `grep` and `glob`. Pixel-art characters (Greg & Glop) live on screen as an always-on-top Electron overlay — animated, draggable, and interactive. Right-click opens a command menu. Left-click opens Terminal.
+Technical context and key architectural decisions for AI coding sessions.
 
-## How to run
+## Quick Reference
 ```bash
 cd "/Users/Till/Projects/Greg & glop"
 npm start       # launch the shrine
@@ -74,9 +73,9 @@ docs/                 — Concept docs and research
 2. **Badge position** — sits awkwardly on the sprite
 3. **Project jumper** — open-project IPC fires but Terminal doesn't open at correct path
 
-## Rules
-- Never expand the main shrine window (200×200) — panels are always separate BrowserWindows
-- Panels appear 8px to the right of the shrine, position computed from `win.getPosition()`
-- Panels close on blur (clicking outside) — be careful with dialog boxes triggering blur prematurely
-- Always use `panel-preload.js` for panel renderers, `preload.js` for the shrine only
-- Glassmorphic style for all panels: `rgba(18,18,18,0.88)` + `backdrop-filter: blur(20px)` + `border: 1px solid rgba(255,255,255,0.1)` + `border-radius: 12px`
+## Key Architectural Decisions
+- **Fixed shrine window** — Never expand main window (200×200), panels are separate BrowserWindows
+- **Panel positioning** — 8px to the right of shrine, computed from `win.getPosition()`
+- **Blur-to-close** — Panels close on blur, be careful with dialogs triggering premature blur
+- **Preload separation** — `panel-preload.js` for panels, `preload.js` for shrine only
+- **Glassmorphic panels** — `rgba(18,18,18,0.88)` + `backdrop-filter: blur(20px)` + `border: 1px solid rgba(255,255,255,0.1)` + `border-radius: 12px`

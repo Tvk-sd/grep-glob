@@ -1,0 +1,46 @@
+---
+description: UI styling conventions for glassmorphic panels
+globs: "**/*.{html,css}"
+alwaysApply: false
+---
+
+# UI Styling Standards
+
+## Glassmorphic Panel Style
+All panels must use consistent glassmorphic styling:
+
+```css
+/* ✅ Standard panel styling */
+.panel {
+  background: rgba(18, 18, 18, 0.88);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+/* ❌ Don't use solid backgrounds */
+.panel {
+  background: #121212;
+}
+```
+
+## Panel Behavior
+- Panels close on blur (clicking outside)
+- Position 8px right of shrine window
+- Use separate BrowserWindows, never expand main shrine
+
+## Sprite Animation
+Reference sprite frames by semantic meaning:
+
+```javascript
+// ✅ GOOD - semantic frame names
+const FRAMES = {
+  idle: 5,      // Group 10.png
+  grep: 1,      // Group 6.png  
+  glob: 3,      // Group 8.png
+  searching: [0,1,2,3,4]  // Animation loop
+}
+
+// ❌ BAD - raw indices
+drawFrame(5)  // What does 5 mean?
+```

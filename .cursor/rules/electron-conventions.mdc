@@ -1,0 +1,42 @@
+---
+description: Electron architecture and IPC conventions for Greg & Glop
+globs: "**/*.{js,html}"
+alwaysApply: false
+---
+
+# Electron Conventions
+
+## IPC Channel Naming
+Use descriptive, action-oriented names:
+
+```javascript
+// ✅ GOOD
+ipcMain.handle('run-grep', async (event, pattern, directory) => {})
+ipcRenderer.invoke('get-projects')
+
+// ❌ BAD  
+ipcMain.handle('grep', async (event, data) => {})
+ipcRenderer.invoke('projects')
+```
+
+## Preload Script Separation
+- `preload.js` — Shrine renderer only
+- `panel-preload.js` — All panel renderers
+
+```javascript
+// ✅ In panel HTML files
+<script src="panel-preload.js"></script>
+
+// ✅ In index.html only
+<script src="preload.js"></script>
+```
+
+## Window Management
+- Main shrine: Fixed 200×200, never resize
+- Panels: Separate BrowserWindows, positioned 8px right of shrine
+
+```javascript
+// ✅ Panel positioning
+const [shrineX, shrineY] = mainWindow.getPosition()
+panelWindow.setPosition(shrineX + 208, shrineY)
+```

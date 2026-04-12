@@ -4,113 +4,331 @@
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 300px; height: 130px; background: transparent; overflow: hidden; }
+    html, body {
+      width: 300px;
+      height: 360px;
+      background: transparent;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
     #panel {
-      margin: 6px;
-      background: rgba(18, 18, 18, 0.88);
-      backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 14px;
-      font-family: monospace;
-      color: #e8e8e8;
+      height: 100%;
+      box-sizing: border-box;
+      background: transparent;
+      border: none;
+      padding: 12px 14px 10px;
+      color: #000000;
       display: flex;
       flex-direction: column;
       gap: 8px;
+      min-height: 0;
     }
-    input {
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 6px;
-      color: #e8e8e8;
-      font-family: monospace;
+    #primary {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #000000;
+      border-radius: 0;
+      color: #000000;
+      font-family: inherit;
       font-size: 13px;
-      padding: 6px 10px;
+      font-weight: 700;
+      padding: 6px 2px 8px;
       outline: none;
       width: 100%;
-      transition: border-color 0.15s;
+      flex-shrink: 0;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
     }
-    input:focus { border-color: rgba(255,255,255,0.3); }
-    input::placeholder { color: rgba(255,255,255,0.25); }
-    #dir-row { display: flex; align-items: center; gap: 8px; }
-    #dir-label {
-      font-size: 10px;
-      color: rgba(255,255,255,0.35);
+    #primary:hover {
+      background: #000000;
+      color: #ffffff;
+    }
+    #primary:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+    #primary:disabled:hover {
+      background: transparent;
+      color: #000000;
+    }
+    #dir-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    #scan-dir-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #000000;
       flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       cursor: pointer;
-      transition: color 0.1s;
+      padding: 2px 4px;
+      border-radius: 0;
+      transition: background 0.1s, color 0.1s;
     }
-    #dir-label:hover { color: rgba(255,255,255,0.65); }
-    #status { font-size: 10px; color: rgba(255,255,255,0.35); }
-    #status.found { color: #7ed321; }
-    #status.error { color: #ff6b6b; }
-    #status.busy  { color: rgba(255,255,255,0.5); }
+    #scan-dir-label:hover {
+      background: #000000;
+      color: #ffffff;
+    }
+    #status {
+      font-size: 11px;
+      font-weight: 500;
+      color: #000000;
+      flex-shrink: 0;
+    }
+    #status.found { color: #2a7d00; }
+    #status.error { color: #c0392b; }
+    #status.busy { color: #000000; }
+    #results {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    #results::-webkit-scrollbar { width: 4px; }
+    #results::-webkit-scrollbar-track { background: transparent; }
+    #results::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 0;
+    }
+    .result-row {
+      display: flex;
+      align-items: center;
+      padding: 6px 4px;
+      cursor: pointer;
+      border-radius: 0;
+      transition: background 0.1s, color 0.1s;
+    }
+    .result-row:hover {
+      background: #000000;
+      color: #ffffff;
+    }
+    .result-row .info {
+      flex: 1;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .result-row .name {
+      font-size: 12px;
+      font-weight: 700;
+      color: inherit;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .result-row .rel {
+      font-size: 10px;
+      font-weight: 500;
+      color: inherit;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+      opacity: 0.6;
+    }
+    .open-btn {
+      opacity: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: inherit;
+      padding: 2px 4px;
+      border-radius: 0;
+      flex-shrink: 0;
+      transition: opacity 0.1s;
+      line-height: 1;
+    }
+    .result-row:hover .open-btn { opacity: 1; }
+    #hint {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.35);
+      text-align: center;
+      padding: 24px 0 0;
+      line-height: 1.7;
+    }
+    #hint code {
+      font-family: "SF Mono", Menlo, monospace;
+      font-size: 10px;
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: 0;
+      padding: 1px 4px;
+    }
   </style>
 </head>
 <body>
   <div id="panel">
-    <input id="pattern" type="text" placeholder="pattern…" autocomplete="off" spellcheck="false" />
+    <button type="button" id="primary">### Now (trackers)</button>
     <div id="dir-row">
-      <span id="dir-label">loading…</span>
-      <span id="status"></span>
+      <span id="scan-dir-label" title="">~/Projects</span>
     </div>
+    <div id="status"></div>
+    <div id="results"></div>
   </div>
 
   <script>
-    const patternInput = document.getElementById('pattern');
-    const dirLabel     = document.getElementById('dir-label');
-    const status       = document.getElementById('status');
-
-    let currentDir = '';
+    const primaryBtn = document.getElementById('primary');
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const scanDirLabel = document.getElementById('scan-dir-label');
 
     function shortenPath(p) {
-      return p.replace(/^\/Users\/[^/]+/, '~');
+      return String(p).replace(/^\/Users\/[^/]+/, '~');
     }
 
-    // Load default directory from main process
-    window.panelAPI.getDefaultDir().then(dir => {
-      currentDir = dir;
-      dirLabel.textContent = shortenPath(dir);
-      dirLabel.title = dir;
+    function fileLabel(absPath) {
+      const base = absPath.split(/[/\\]/).pop() || absPath;
+      return base;
+    }
+
+    function setStatus(text, cls) {
+      statusEl.textContent = text;
+      statusEl.className = cls || '';
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.panelAPI.closePanel();
     });
 
-    dirLabel.addEventListener('click', async () => {
-      const picked = await window.panelAPI.pickDirectory();
-      if (picked) {
-        currentDir = picked;
-        dirLabel.textContent = shortenPath(picked);
-        dirLabel.title = picked;
+    async function refreshScanRootLabel() {
+      if (!window.panelAPI || typeof window.panelAPI.getTrackerScanRoot !== 'function') return;
+      try {
+        const r = await window.panelAPI.getTrackerScanRoot();
+        const p = r && r.path ? String(r.path) : '';
+        scanDirLabel.textContent = p ? shortenPath(p) : '—';
+        scanDirLabel.title = p || '';
+      } catch {
+        scanDirLabel.textContent = '~/Projects';
+      }
+    }
+
+    scanDirLabel.addEventListener('click', async () => {
+      if (!window.panelAPI) return;
+      try {
+        const picked = await window.panelAPI.pickDirectory();
+        if (!picked) return;
+        const ok = await window.panelAPI.setTrackerScanRoot(picked);
+        await refreshScanRootLabel();
+        if (!ok || !ok.ok) {
+          setStatus('Could not set scan folder', 'error');
+        }
+      } catch {
+        /* ignore */
       }
     });
 
-    patternInput.addEventListener('keydown', async (e) => {
-      if (e.key === 'Escape') { window.panelAPI.closePanel(); return; }
-      if (e.key !== 'Enter') return;
+    resultsEl.innerHTML = '<div id="hint">Click <strong>### Now (trackers)</strong> to load queue<br><code>### Now</code> bullets from <code>context/</code>, <code>conductor/</code>, …</div>';
+    refreshScanRootLabel();
 
-      const pattern = patternInput.value.trim();
-      if (!pattern || !currentDir) return;
+    primaryBtn.addEventListener('click', async () => {
+      primaryBtn.disabled = true;
+      resultsEl.innerHTML = '';
+      setStatus('Loading…', 'busy');
+      await refreshScanRootLabel();
 
-      status.textContent = 'searching…';
-      status.className = 'busy';
-      patternInput.disabled = true;
+      try {
+        if (!window.panelAPI || typeof window.panelAPI.getTrackerNextItems !== 'function') {
+          setStatus('Panel bridge missing (preload)', 'error');
+          resultsEl.innerHTML = '<div id="hint">Preload error</div>';
+          return;
+        }
+        const res = await Promise.resolve(window.panelAPI.getTrackerNextItems());
+        const error = res && res.error ? String(res.error) : '';
+        const items = Array.isArray(res && res.items) ? res.items : [];
 
-      const result = await window.panelAPI.runGrep(pattern, currentDir);
-      window.panelAPI.grepDone(result);
+        if (error === 'missing-root') {
+          setStatus('Scan folder not found', 'error');
+          resultsEl.innerHTML = '<div id="hint">Pick another folder above</div>';
+          return;
+        }
+        if (error === 'no-tracker-files') {
+          setStatus('No tracker markdown found', 'error');
+          resultsEl.innerHTML = '<div id="hint">Try another scan folder<br>or add <code>context/</code> / <code>conductor/</code> with <code>.md</code></div>';
+          return;
+        }
+        if (error === 'read-failed' || error === 'parse-failed') {
+          setStatus('Could not read a tracker file', 'error');
+          resultsEl.innerHTML = '';
+          return;
+        }
+        if (error === 'no-next-section' || error === 'no-queue-section') {
+          setStatus('No ### Now sections found', 'error');
+          resultsEl.innerHTML = '';
+          return;
+        }
 
-      status.textContent = result.error
-        ? 'error'
-        : result.count === 0
-          ? 'no matches'
-          : `${result.count} match${result.count !== 1 ? 'es' : ''} · copied`;
-      status.className = result.error ? 'error' : result.count > 0 ? 'found' : '';
+        if (!items.length) {
+          setStatus('No ### Now bullets in scanned files', '');
+          resultsEl.innerHTML = '<div id="hint">Add <code>-</code> or <code>*</code> bullets under <code>### Now</code></div>';
+          return;
+        }
 
-      setTimeout(() => window.panelAPI.closePanel(), 1200);
+        setStatus(
+          `${items.length} item${items.length !== 1 ? 's' : ''}  ·  click row to open in editor`,
+          'found'
+        );
+
+        for (const item of items) {
+          if (!item || typeof item.text !== 'string') continue;
+          const row = document.createElement('div');
+          row.className = 'result-row';
+          row.title = 'Open in editor';
+
+          const info = document.createElement('div');
+          info.className = 'info';
+          const nameEl = document.createElement('div');
+          nameEl.className = 'name';
+          nameEl.textContent = item.text;
+          const relEl = document.createElement('div');
+          relEl.className = 'rel';
+          const src = item.sourceRel ? shortenPath(item.sourceRel) : fileLabel(item.path || '');
+          relEl.textContent = `${src} · line ${item.openLine || 1}`;
+          info.appendChild(nameEl);
+          info.appendChild(relEl);
+
+          const btn = document.createElement('span');
+          btn.className = 'open-btn';
+          btn.textContent = '↗';
+          btn.title = 'Open in editor';
+
+          async function openItem() {
+            try {
+              const r = await window.panelAPI.openFileAtLine(item.path, item.openLine, '');
+              if (!r || !r.ok) {
+                setStatus('Could not open file', 'error');
+              }
+            } catch {
+              setStatus('Could not open file', 'error');
+            }
+          }
+
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openItem();
+          });
+          row.addEventListener('mousedown', (e) => { e.preventDefault(); });
+          row.addEventListener('click', () => { openItem(); });
+
+          row.appendChild(info);
+          row.appendChild(btn);
+          resultsEl.appendChild(row);
+        }
+      } catch (e) {
+        const msg = e && e.message ? String(e.message) : 'unknown error';
+        setStatus(msg.length > 80 ? 'Could not load list' : msg, 'error');
+        resultsEl.innerHTML = '';
+      } finally {
+        primaryBtn.disabled = false;
+      }
     });
 
-    patternInput.focus();
+    primaryBtn.focus();
   </script>
 </body>
 </html>

@@ -4,161 +4,379 @@
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 240px; height: 300px; background: transparent; overflow: hidden; }
+    html, body {
+      width: 300px;
+      height: 360px;
+      background: transparent;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
     #panel {
-      margin: 6px;
-      background: rgba(18, 18, 18, 0.88);
-      backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      font-family: monospace;
-      color: #e8e8e8;
+      height: 100%;
+      box-sizing: border-box;
+      background: transparent;
+      border: none;
+      padding: 12px 14px 10px;
+      color: #000000;
       display: flex;
       flex-direction: column;
-      max-height: 288px;
+      gap: 8px;
+      min-height: 0;
     }
-    #header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
+    input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #000000;
+      border-radius: 0;
+      color: #000000;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 2px 8px;
+      outline: none;
+      width: 100%;
       flex-shrink: 0;
     }
-    #header .title { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 0.05em; }
-    #btn-add {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 5px;
-      color: rgba(255,255,255,0.5);
-      font-size: 14px;
-      line-height: 1;
-      padding: 1px 6px;
-      cursor: pointer;
-      transition: color 0.1s, border-color 0.1s;
-    }
-    #btn-add:hover { color: #e8e8e8; border-color: rgba(255,255,255,0.4); }
-    #list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 4px 0;
-    }
-    #list::-webkit-scrollbar { width: 4px; }
-    #list::-webkit-scrollbar-track { background: transparent; }
-    #list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-    .project-row {
+    input::placeholder { color: rgba(0, 0, 0, 0.35); font-weight: 600; }
+    #dir-row {
       display: flex;
       align-items: center;
-      padding: 8px 14px;
-      cursor: pointer;
-      transition: background 0.1s;
-      position: relative;
-    }
-    .project-row:hover { background: rgba(255,255,255,0.07); }
-    .project-row .info { flex: 1; overflow: hidden; }
-    .project-row .name {
-      font-size: 12px;
-      font-weight: bold;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .project-row .path {
-      font-size: 10px;
-      color: rgba(255,255,255,0.35);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: 1px;
-    }
-    .trash {
-      opacity: 0;
-      font-size: 12px;
-      color: rgba(255,255,255,0.3);
-      padding: 2px 4px;
-      border-radius: 4px;
-      transition: opacity 0.1s, color 0.1s;
+      gap: 8px;
       flex-shrink: 0;
     }
-    .project-row:hover .trash { opacity: 1; }
-    .trash:hover { color: #ff6b6b; }
-    #empty {
-      padding: 20px 14px;
+    #dir-label {
       font-size: 11px;
-      color: rgba(255,255,255,0.25);
+      font-weight: 500;
+      color: #000000;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 0;
+      transition: background 0.1s, color 0.1s;
+    }
+    #dir-label:hover { background: #000000; color: #ffffff; }
+    #status {
+      font-size: 11px;
+      font-weight: 500;
+      color: #000000;
+      flex-shrink: 0;
+    }
+    #status.found { color: #2a7d00; }
+    #status.error { color: #c0392b; }
+    #status.busy  { color: #000000; }
+    #status.copied { color: #1a6bbf; }
+    #results {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    #results::-webkit-scrollbar { width: 4px; }
+    #results::-webkit-scrollbar-track { background: transparent; }
+    #results::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 0;
+    }
+    .result-row {
+      display: flex;
+      align-items: center;
+      padding: 6px 4px;
+      cursor: pointer;
+      border-radius: 0;
+      transition: background 0.1s, color 0.1s;
+    }
+    .result-row:hover { background: #000000; color: #ffffff; }
+    .result-row .info { flex: 1; min-width: 0; overflow: hidden; }
+    .result-row .name {
+      font-size: 12px;
+      font-weight: 700;
+      color: inherit;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Prefix may shrink + ellipsis; tail stays fully visible (avoid end-ellipsis on whole line). */
+    .result-row .rel {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      min-width: 0;
+      max-width: 100%;
+      font-size: 10px;
+      font-weight: 500;
+      color: inherit;
+      margin-top: 1px;
+      opacity: 0.6;
+    }
+    .result-row .rel .path-prefix {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      opacity: 0.85;
+      font-weight: 500;
+    }
+    .result-row .rel .path-tail {
+      flex: 0 0 auto;
+      white-space: nowrap;
+      font-weight: 700;
+      opacity: 1;
+    }
+    .result-row:hover .rel .path-prefix { opacity: 0.95; }
+    .result-group {
+      margin-bottom: 10px;
+    }
+    .result-group:last-child { margin-bottom: 0; }
+    .result-group-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: rgba(0, 0, 0, 0.45);
+      padding: 4px 4px 2px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      margin-bottom: 2px;
+    }
+    .open-btn {
+      opacity: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: inherit;
+      padding: 2px 4px;
+      border-radius: 0;
+      flex-shrink: 0;
+      transition: opacity 0.1s;
+      line-height: 1;
+    }
+    .result-row:hover .open-btn { opacity: 1; }
+    #hint {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(0,0,0,0.35);
       text-align: center;
-      line-height: 1.6;
+      padding: 24px 0 0;
+      line-height: 1.7;
+    }
+    #hint code {
+      font-family: "SF Mono", Menlo, monospace;
+      font-size: 10px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 0;
+      padding: 1px 4px;
     }
   </style>
 </head>
 <body>
   <div id="panel">
-    <div id="header">
-      <span class="title">PROJECTS</span>
-      <button id="btn-add">+</button>
+    <input id="pattern" type="text" placeholder="**/*.ts" autocomplete="off" spellcheck="false" autofocus>
+    <div id="dir-row">
+      <span id="dir-label">~/Projects</span>
     </div>
-    <div id="list"></div>
+    <div id="status"></div>
+    <div id="results"></div>
   </div>
 
   <script>
-    const list = document.getElementById('list');
-    let projects = [];
+    const patternInput = document.getElementById('pattern');
+    const dirLabel     = document.getElementById('dir-label');
+    const statusEl     = document.getElementById('status');
+    const resultsEl    = document.getElementById('results');
+
+    let currentDir    = null;
+    let debounceTimer = null;
+    let statusTimer   = null;
 
     function shortenPath(p) {
       return p.replace(/^\/Users\/[^/]+/, '~');
     }
 
-    function render() {
-      list.innerHTML = '';
-      if (projects.length === 0) {
-        list.innerHTML = '<div id="empty">No projects yet<br>Press + to add one</div>';
-        return;
-      }
-      projects.forEach(p => {
-        const row = document.createElement('div');
-        row.className = 'project-row';
-
-        const info = document.createElement('div');
-        info.className = 'info';
-        info.innerHTML = `<div class="name">${p.name}</div><div class="path">${shortenPath(p.path)}</div>`;
-
-        const trash = document.createElement('span');
-        trash.className = 'trash';
-        trash.textContent = '✕';
-        trash.title = 'Remove';
-        trash.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          projects = await window.panelAPI.removeProject(p.id);
-          render();
-        });
-
-        row.appendChild(info);
-        row.appendChild(trash);
-        row.addEventListener('click', () => {
-          window.panelAPI.openProject(p.path);
-        });
-
-        list.appendChild(row);
-      });
+    function escapeHtml(s) {
+      if (typeof s !== 'string') return '';
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
-    // Load projects and render
-    window.panelAPI.getProjects().then(data => {
-      projects = data;
-      render();
-    });
+    /** First folder segment under search root, or `__root__` if the hit is directly in root. */
+    function groupKeyForRel(rel) {
+      const i = rel.indexOf('/');
+      if (i === -1) return '__root__';
+      return rel.slice(0, i);
+    }
 
-    document.getElementById('btn-add').addEventListener('click', async () => {
+    function pathBelowTopFolder(rel, key) {
+      if (key === '__root__') return rel;
+      return rel.slice(key.length + 1);
+    }
+
+    /** Dimmed prefix (left-truncated) + bold last 1–2 path segments. */
+    function formatPathTail(relForTail, maxPrefixChars) {
+      const max = maxPrefixChars == null ? 28 : maxPrefixChars;
+      const parts = relForTail.split('/').filter(Boolean);
+      if (parts.length === 0) return '';
+      const tailParts = parts.length >= 2 ? 2 : 1;
+      const tail = parts.slice(-tailParts).join('/');
+      const prefix = parts.slice(0, -tailParts).join('/');
+      let prefixShown = prefix;
+      if (prefixShown.length > max) {
+        prefixShown = '…' + prefixShown.slice(-(max - 1));
+      }
+      const pEsc = prefixShown ? escapeHtml(prefixShown + '/') : '';
+      const tEsc = escapeHtml(tail);
+      if (!pEsc) {
+        return `<span class="path-tail">${tEsc}</span>`;
+      }
+      return `<span class="path-prefix">${pEsc}</span><span class="path-tail">${tEsc}</span>`;
+    }
+
+    function compareGroupKeys(a, b) {
+      if (a === '__root__') return 1;
+      if (b === '__root__') return -1;
+      return a.localeCompare(b, undefined, { sensitivity: 'base' });
+    }
+
+    function setStatus(text, cls) {
+      clearTimeout(statusTimer);
+      statusEl.textContent = text;
+      statusEl.className = cls || '';
+    }
+
+    function flashStatus(text, cls, duration) {
+      setStatus(text, cls);
+      statusTimer = setTimeout(() => setStatus(''), duration);
+    }
+
+    async function initDir() {
+      const def = await window.panelAPI.getDefaultDir(); // e.g. /Users/Till/Projects
+      currentDir = def.substring(0, def.lastIndexOf('/')) || def; // → /Users/Till
+      dirLabel.textContent = shortenPath(currentDir);
+    }
+
+    dirLabel.addEventListener('click', async () => {
       const picked = await window.panelAPI.pickDirectory();
       if (picked) {
-        projects = await window.panelAPI.addProject(picked);
-        render();
+        currentDir = picked;
+        dirLabel.textContent = shortenPath(currentDir);
+        if (patternInput.value.trim()) runGlob();
       }
     });
 
-    document.addEventListener('keydown', (e) => {
+    function render({ files, error }) {
+      resultsEl.innerHTML = '';
+
+      if (error) {
+        resultsEl.innerHTML = `<div id="hint">${escapeHtml(error)}</div>`;
+        return;
+      }
+      if (files.length === 0) {
+        resultsEl.innerHTML = '<div id="hint">No matches</div>';
+        return;
+      }
+
+      const groups = new Map();
+      for (const item of files) {
+        const key = groupKeyForRel(item.rel);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
+      }
+
+      const keys = [...groups.keys()].sort(compareGroupKeys);
+      for (const key of keys) {
+        const items = groups.get(key);
+        items.sort((a, b) => a.rel.localeCompare(b.rel, undefined, { sensitivity: 'base' }));
+
+        const groupEl = document.createElement('div');
+        groupEl.className = 'result-group';
+
+        const labelEl = document.createElement('div');
+        labelEl.className = 'result-group-label';
+        labelEl.textContent = key === '__root__' ? 'Here' : key;
+        groupEl.appendChild(labelEl);
+
+        for (const item of items) {
+          const row = document.createElement('div');
+          row.className = 'result-row';
+          row.title = item.rel;
+
+          const belowTop = pathBelowTopFolder(item.rel, key);
+          const relHtml = formatPathTail(belowTop);
+
+          const info = document.createElement('div');
+          info.className = 'info';
+          info.innerHTML = `<div class="name">${escapeHtml(item.name)}</div><div class="rel">${relHtml}</div>`;
+
+          const btn = document.createElement('span');
+          btn.className = 'open-btn';
+          btn.textContent = '↗';
+          btn.title = 'Open folder in Terminal';
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dir = item.abs.replace(/\/[^/]+$/, '') || currentDir;
+            window.panelAPI.openProject(dir);
+          });
+
+          row.appendChild(info);
+          row.appendChild(btn);
+
+          row.addEventListener('click', () => {
+            window.panelAPI.copyToClipboard(item.rel);
+            flashStatus('Copied!', 'copied', 1500);
+          });
+
+          groupEl.appendChild(row);
+        }
+
+        resultsEl.appendChild(groupEl);
+      }
+    }
+
+    async function runGlob() {
+      const raw = patternInput.value.trim();
+      const pattern = raw && !/[*?{]/.test(raw) ? `**/${raw}` : raw;
+      if (!pattern) {
+        setStatus('');
+        resultsEl.innerHTML = '<div id="hint">Type a glob pattern<br><code>**/*.ts</code> &nbsp; <code>src/**/*.test.*</code></div>';
+        return;
+      }
+      setStatus('Matching…', 'busy');
+      let result = { files: [], error: null };
+      try {
+        result = await window.panelAPI.runGlob(pattern, currentDir);
+      } catch {
+        setStatus('');
+        render({ files: [], error: null });
+        return;
+      }
+      if (result.error) {
+        setStatus('');
+      } else {
+        setStatus(
+          result.files.length > 0
+            ? `${result.files.length} file${result.files.length !== 1 ? 's' : ''} matched  ·  click to copy path`
+            : '',
+          result.files.length > 0 ? 'found' : ''
+        );
+      }
+      render(result);
+    }
+
+    patternInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(runGlob, 350);
+    });
+
+    patternInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { clearTimeout(debounceTimer); runGlob(); }
       if (e.key === 'Escape') window.panelAPI.closePanel();
     });
+
+    resultsEl.innerHTML = '<div id="hint">Type a glob pattern<br><code>**/*.ts</code> &nbsp; <code>src/**/*.test.*</code></div>';
+    initDir();
   </script>
 </body>
 </html>

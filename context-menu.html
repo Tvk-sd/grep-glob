@@ -6,56 +6,62 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 220px;
-      height: 148px;
+      height: 132px;
       background: transparent;
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     #menu {
-      margin: 6px;
-      background: rgba(18, 18, 18, 0.88);
-      backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      overflow: hidden;
-      font-family: monospace;
-      font-size: 12px;
-      color: #e8e8e8;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 8px 10px 10px;
+      gap: 2px;
+      background: transparent;
     }
     .row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
+      padding: 8px 10px;
       cursor: pointer;
-      transition: background 0.1s;
+      transition: background 0.1s, color 0.1s;
+      border-radius: 0;
+      color: #000000;
+      text-align: center;
     }
-    .row:hover { background: rgba(255,255,255,0.08); }
-    .row .sprite {
-      width: 28px;
-      height: 28px;
-      flex-shrink: 0;
-      image-rendering: pixelated;
+    .row .row-text {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      line-height: 1.25;
+      color: inherit;
     }
-    .row .label { font-weight: bold; font-size: 13px; }
-    .row .sub   { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
-    .divider {
-      height: 1px;
-      background: rgba(255,255,255,0.08);
-      margin: 0 10px;
+    .row:hover {
+      background: #000000;
+      color: #ffffff;
     }
     .system-row {
       display: flex;
-      justify-content: space-between;
-      padding: 7px 14px;
+      justify-content: center;
+      gap: 16px;
+      align-items: center;
+      margin-top: 6px;
+      padding: 6px 4px 0;
       font-size: 11px;
-      color: rgba(255,255,255,0.35);
+      font-weight: 500;
     }
     .system-row span {
       cursor: pointer;
-      transition: color 0.1s;
+      padding: 4px 6px;
+      margin: -4px -6px;
+      border-radius: 0;
+      transition: background 0.1s, color 0.1s;
+      color: #000000;
     }
-    .system-row span:hover { color: rgba(255,255,255,0.7); }
-    .system-row span.active { color: rgba(255,255,255,0.6); }
+    .system-row span:hover {
+      background: #000000;
+      color: #ffffff;
+    }
+    .system-row span.active { font-weight: 600; }
   </style>
 </head>
 <body>
@@ -65,11 +71,7 @@
          onmouseenter="hover('grep')"
          onmouseleave="hover(null)"
          onclick="select('grep')">
-      <canvas class="sprite" id="sprite-grep" width="28" height="28"></canvas>
-      <div>
-        <div class="label">grep</div>
-        <div class="sub">search in files</div>
-      </div>
+      <div class="row-text">grep whats next</div>
     </div>
 
     <div class="row" id="row-glob"
@@ -77,55 +79,22 @@
          onmouseenter="hover('glob')"
          onmouseleave="hover(null)"
          onclick="select('glob')">
-      <canvas class="sprite" id="sprite-glob" width="28" height="28"></canvas>
-      <div>
-        <div class="label">glob</div>
-        <div class="sub">jump to project</div>
-      </div>
+      <div class="row-text">glob it all up</div>
     </div>
 
-    <div class="divider"></div>
-
-    <div class="system-row">
+    <div class="system-row" onmouseenter="hover('idle')">
       <span id="btn-top" onclick="select('toggle-top')">⊙ on top</span>
       <span onclick="select('quit')">✕ quit</span>
     </div>
   </div>
 
   <script>
-    // Load sprite frames
-    const GREG_SRC = 'assets/Group 6.png';   // grep frame
-    const GLOP_SRC = 'assets/Group 8.png';   // glob frame
-    const MAX_W = 806, MAX_H = 682;
-
-    function drawSprite(canvasEl, src) {
-      const ctx = canvasEl.getContext('2d');
-      const size = canvasEl.width;
-      const sc = size / Math.max(MAX_W, MAX_H);
-      const img = new Image();
-      img.src = src;
-      img.onload = () => {
-        const w = img.naturalWidth * sc;
-        const h = img.naturalHeight * sc;
-        ctx.clearRect(0, 0, size, size);
-        ctx.drawImage(img, (size - w) / 2, size - h, w, h);
-      };
-    }
-
-    drawSprite(document.getElementById('sprite-grep'), GREG_SRC);
-    drawSprite(document.getElementById('sprite-glob'), GLOP_SRC);
-
-    // Reflect always-on-top state
     window.panelAPI.isAlwaysOnTop().then(on => {
       document.getElementById('btn-top').classList.toggle('active', on);
     });
 
     function hover(cmd) {
       window.panelAPI.menuHover(cmd);
-      // Dim non-hovered rows
-      document.querySelectorAll('.row').forEach(r => {
-        r.style.opacity = (!cmd || r.dataset.cmd === cmd) ? '1' : '0.4';
-      });
     }
 
     function select(cmd) {

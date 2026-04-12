@@ -11,26 +11,26 @@ npm start       # launch the shrine
 
 ## What it does
 
-- **Greg (grep)** — Right-click → Grep panel for pattern searching
-- **Glop (glob)** — Right-click → Projects panel for directory jumping  
+- **Greg (grep)** — Right-click menu → panel that reads **Now / Next / Later** from `context/PROJECT-TRACKER.md` and opens the right file at the right line in **Cursor** or **VS Code**
+- **Glop (glob)** — Right-click menu → panel to type a **glob** (or plain filename), pick a search root, copy relative paths, or open **Terminal** in a hit’s folder
 - **Left-click** — Opens Terminal at ~/Projects
 - **Draggable** — Move the shrine around your desktop
 - **Always on top** — Stays visible across all applications
 
 ## Features
 
-- Animated pixel-art characters that respond to interactions
-- Custom context menu with glassmorphic styling
-- Grep search with result badges
-- Project directory management and quick Terminal access
-- Persistent project list stored locally
+- Animated pixel-art characters that respond to menu hover and state
+- Custom context menu (Greg / Glop rows + always-on-top + quit)
+- Greg: tracker queue + editor integration
+- Glop: live glob results (`mdfind` / `find` on macOS)
+- Optional `projects.json` IPC in main for a future pinned-project UI (not exposed in the Glop panel today)
 
 ## Tech Stack
 
 - **Electron 34** — Frameless transparent window, always-on-top
 - **Vanilla JS + Canvas** — No framework, no bundler
 - **Node.js** — Electron only (devDependency)
-- **Local storage** — Projects persist to `~/Library/Application Support/greg-and-glop/projects.json`
+- **Local storage** — `projects.json` under app userData exists for future pinned projects; tracker queue lives in-repo at `context/PROJECT-TRACKER.md`
 
 ## Documentation
 

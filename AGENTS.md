@@ -4,7 +4,7 @@ Instructions for AI coding agents working on this project.
 
 ## Project Understanding
 
-You're working on a macOS desktop shrine app — two pixel-art characters (Greg & Glop) that float on screen representing `grep` and `glob` bash commands. Users interact via right-click context menu and left-click Terminal opening.
+You're working on a macOS desktop shrine app — two pixel-art characters (Greg & Glop) that float on screen. **Greg** opens a panel tied to **markdown tracker** + editor jumps; **Glop** opens a **glob** path finder. Users interact via right-click context menu, tray, and left-click Terminal at `~/Projects` on the shrine canvas.
 
 ## Coding Conventions
 
@@ -25,12 +25,13 @@ docs/                   # Documentation
 ```
 
 ### IPC Patterns
-- Use descriptive channel names: `move-window`, `run-grep`, `get-projects`
+- Use descriptive channel names: `move-window`, `run-glob`, `get-tracker-next-items`, `open-project`
 - Main → Renderer: Push state updates (`shrine-state`, `grep-result`)
 - Renderer → Main: Request actions (`open-terminal`, `close-panel`)
 
 ### UI Consistency
-- **Glassmorphic panels**: `rgba(18,18,18,0.88)` background with `backdrop-filter: blur(20px)`
+- **Greg panel**: glass stack (`rgba(18,18,18,0.88)` + `backdrop-filter: blur(20px)`) per `grep-panel.html`
+- **Glop panel**: minimal transparent chrome on `projects-panel.html` (still blur-to-close like other panels)
 - **Panel positioning**: 8px right of shrine, computed from `win.getPosition()`
 - **Window constraints**: Shrine stays 200×200, panels are separate windows
 

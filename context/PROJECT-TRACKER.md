@@ -1,4 +1,4 @@
-# Greg & Glop — Tracker
+# Greb & Glob — Tracker
 
 **Status:** In Progress
 **Last updated:** 2026-04-12
@@ -18,22 +18,22 @@ Rules that apply in every session — follow automatically, no instruction neede
 
 ---
 
-## Greg value — Active
+## Greb value — Active
 
 ### Now
 
-- Greg (grep panel): first **surfacing** slice — a **sweep** preset (e.g. TODO / FIXME / HACK) that returns a **grouped list** of hits (path + line/snippet), not only a match count; keep the shrine window fixed, expand behavior inside the grep panel only
+- Greb (grep panel): first **surfacing** slice — a **sweep** preset (e.g. TODO / FIXME / HACK) that returns a **grouped list** of hits (path + line/snippet), not only a match count; keep the shrine window fixed, expand behavior inside the grep panel only
 
 ### Next
 
-- Greg: **search mode** stays — literal pattern — but wire results to the same list UI; add **copy** actions (all matching lines, unique paths)
-- Greg: **click row → open file at line** (or documented editor integration)
+- Greb: **search mode** stays — literal pattern — but wire results to the same list UI; add **copy** actions (all matching lines, unique paths)
+- Greb: **click row → open file at line** (or documented editor integration)
 
 ### Later
 
-- Greg: **digest** mode — e.g. “latest TODO” card — with an explicit, labeled recency rule (git mtime vs file mtime vs first hit)
-- Greg: **multi-root sweep** across Glop-pinned projects
-- Glop: **project jumper “Finder view”** — richer than a plain list: folder cards, optional last-modified or file-count metadata, icon or colour per project, maybe two columns (recent + pinned); keep glass dark aesthetic; `projects-panel.html` (feature build, after core jumper behavior stays solid)
+- Greb: **digest** mode — e.g. “latest TODO” card — with an explicit, labeled recency rule (git mtime vs file mtime vs first hit)
+- Greb: **multi-root sweep** across Glob-pinned projects
+- Glob: **project jumper “Finder view”** — richer than a plain list: folder cards, optional last-modified or file-count metadata, icon or colour per project, maybe two columns (recent + pinned); keep glass dark aesthetic; `projects-panel.html` (feature build, after core jumper behavior stays solid)
 - **Context menu** — center panel under shrine (today reads offset right): `main.js` → `createContextMenuWin()` + `context-menu.html`; then full visual pass (sizing, rows, sprite presentation, muted system row). Preserve hover→shrine reactions and row sprites (Group 6 grep / Group 8 glob)
 - **Context menu (ideas)** — optional in-row sprite “preview” vs shrine-as-preview; cleaner transition; typography/padding
 - **Badge** — screen position vs sprite feels off; tune `#badge` in `index.html` (`position: absolute` in `#wrapper`; consider below or above sprite)
@@ -41,7 +41,7 @@ Rules that apply in every session — follow automatically, no instruction neede
 ### Done
 
 - Reliable Terminal cwd for `open-project` (AppleScript `cd` + fallback) — 2026-04-12
-- **Shrine embedded Claude terminal** — left-click expands the main window (~560×420), middle chrome bar + opaque xterm area; `node-pty` runs `claude` in `~/Projects` (fallback login shell if spawn fails); PTY exit or × closes session and shrinks back to 200×200; Greg/Glop/menu anchor uses live `getBounds().width` — 2026-04-12
+- **Shrine embedded Claude terminal** — left-click expands the main window (~560×420), middle chrome bar + opaque xterm area; `node-pty` runs `claude` in `~/Projects` (fallback login shell if spawn fails); PTY exit or × closes session and shrinks back to 200×200; Greb/Glob/menu anchor uses live `getBounds().width` — 2026-04-12
 
 ---
 
@@ -53,13 +53,13 @@ Rules that apply in every session — follow automatically, no instruction neede
 
 ## Resume
 
-**Prompt:** "Resume Greg & Glop. Read `CLAUDE.md` and `context/PROJECT-TRACKER.md`."
+**Prompt:** "Resume Greb & Glob. Read `CLAUDE.md` and `context/PROJECT-TRACKER.md`."
 
-**Bottom line:** Greg should **surface patterns**, not only answer “how many matches?” Treat the product as three related modes on one engine: **search** (string in mind), **sweep** (catalog of common signals in a tree), and **digest** (one headline finding, e.g. latest TODO). Sweeps and grouped hit lists teach the model; digest compresses the list. Shrine **defaults** to 200×200 and **expands in-place** for the embedded Claude Code session; Greg/Glop panels still live beside the live window width. Value lives in panels and actions (list, copy, open-at-line) plus the in-shrine terminal.
+**Bottom line:** Greb should **surface patterns**, not only answer “how many matches?” Treat the product as three related modes on one engine: **search** (string in mind), **sweep** (catalog of common signals in a tree), and **digest** (one headline finding, e.g. latest TODO). Sweeps and grouped hit lists teach the model; digest compresses the list. Shrine **defaults** to 200×200 and **expands in-place** for the embedded Claude Code session; Greb/Glob panels still live beside the live window width. Value lives in panels and actions (list, copy, open-at-line) plus the in-shrine terminal.
 
-**Product metaphor:** **Greg (grep)** reads scrolls — search inside file contents (sprite frame Group 6). **Glop (glob)** walks the halls — paths and structure (Group 8). **Idle** Group 10; **loop** frames 5→10 on hover / activity states (`idle` / `grep` / `glob` / `searching` / `found` / `error` per `CLAUDE.md`).
+**Product metaphor:** **Greb (`greb`)** reads scrolls — search inside file contents (sprite frame Group 6). **Glob (`glob`)** walks the halls — paths and structure (Group 8). **Idle** Group 10; **loop** frames 5→10 on hover / activity states (`idle` / `grep` / `glob` / `searching` / `found` / `error` per `CLAUDE.md`).
 
-**Shipped baseline:** shrine + hover loop; **left-click** opens **embedded** Claude Code (`claude` via `node-pty` + xterm in the shrine window, cwd `~/Projects`); tray right-click menu; Greg panel = tracker queue + open in editor; Glop panel = glob + copy path + **external** Terminal in folder (`openTerminalAtPath`); blur-to-close panels; `run-grep` / badge path still in main for a future sweep UI. See `CLAUDE.md` for IPC.
+**Shipped baseline:** shrine + hover loop; **left-click** opens **embedded** Claude Code (`claude` via `node-pty` + xterm in the shrine window, cwd `~/Projects`); tray right-click menu; Greb panel = tracker queue + open in editor; Glob panel = glob + copy path + **external** Terminal in folder (`openTerminalAtPath`); blur-to-close panels; `run-grep` / badge path still in main for a future sweep UI. See `CLAUDE.md` for IPC.
 
 **Branches:** `main` = baseline shrine; active feature work may live on `features/v2` (or a v2 worktree). Prefer merging **to `main`** once polish items (menu centering/visuals, badge) are in good shape. File layout and IPC channels: `CLAUDE.md`.
 

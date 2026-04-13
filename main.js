@@ -492,7 +492,7 @@ app.whenReady().then(() => {
   app.setLoginItemSettings({ openAtLogin: true })
 
   tray = new Tray(path.join(__dirname, 'assets', 'tray-icon.png'))
-  tray.setToolTip('Greg & Glop')
+  tray.setToolTip('Greb & Glob')
   tray.on('right-click', () => createContextMenuWin())
 })
 

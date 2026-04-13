@@ -1,30 +1,34 @@
 # Changelog
 
-## 2026-04-12 — Session 2: Glop grouping, shrine lock, panels, menu copy
+## 2026-04-13 — Greb & Glob naming
+
+Mascot and product copy now use **Greb** and **Glob** (aligned with **`greb`** and **`glob`**). Window title, tray tooltip, README / agent docs, and context menu row **greb whats next**; internal IPC and `shrine-state` values remain `grep` / `glob` for compatibility.
+
+## 2026-04-12 — Session 2: Glob grouping, shrine lock, panels, menu copy
 
 ### Summary
-Glop results are easier to scan (grouped paths + tail emphasis), both panels stay compact without duplicate sprites (the shrine carries Greg/Glop identity), the shrine no longer flickers to idle while a panel is open, and the context menu lines were refreshed.
+Glob results are easier to scan (grouped paths + tail emphasis), both panels stay compact without duplicate sprites (the shrine carries Greb/Glob identity), the shrine no longer flickers to idle while a panel is open, and the context menu lines were refreshed.
 
-### Glop (`projects-panel.html`)
+### Glob (`projects-panel.html`)
 - Group matches by the **first folder** under the search root; files directly in the root appear under **Here**.
 - Path subtitle: **left-truncated prefix** + **bold tail** (last one or two segments); full relative path on row `title` and unchanged click-to-copy behavior.
 - **HTML escaping** on rendered paths and errors.
 
 ### Shrine state (`main.js`, `context-menu.html`)
-- **Idle race:** context menu `closed` no longer overwrites `glob`/`grep` — deferred check so opening Greg/Glop wins over menu teardown.
+- **Idle race:** context menu `closed` no longer overwrites `glob`/`grep` — deferred check so opening Greb/Glob wins over menu teardown.
 - **Hover flicker:** row `mouseleave` no longer sends idle; system row uses **`hover('idle')`** so the shrine only idles when leaving command rows for the utility row.
-- While **Glop** is open, ignore stray `shrine-state` updates except **`glob`** (and idle when the panel closes); **`focus`** re-applies **`glob`**.
-- While **Greg** is open, allow only **`grep`** / sweep outcomes / idle on close; blocks e.g. **`glob`** from stealing the frame. **`focus`** re-applies **`grep`**.
+- While **Glob** is open, ignore stray `shrine-state` updates except **`glob`** (and idle when the panel closes); **`focus`** re-applies **`glob`**.
+- While **Greb** is open, allow only **`grep`** / sweep outcomes / idle on close; blocks e.g. **`glob`** from stealing the frame. **`focus`** re-applies **`grep`**.
 
 ### Panel chrome
-- **Greg** and **Glop** panels: **300×360**, single column — **removed** side-column **Group 6 / Group 8** images (sprites live on the shrine only).
+- **Greb** and **Glob** panels: **300×360**, single column — **removed** side-column **Group 6 / Group 8** images (sprites live on the shrine only).
 
 ### Context menu copy (`context-menu.html`)
-- Greg row: **grep whats next**
-- Glop row: **glob it all up**
+- Greb row: **grep whats next** (menu label; see 2026-04-13 for **greb** copy)
+- Glob row: **glob it all up**
 
 ### Docs
-- **`docs/concept-shrine-glob-grep.md`** — added **Jobs To Be Done** section for the Glop panel (grouped paths + git-scoped ideas from product discussion).
+- **`docs/concept-shrine-glob-grep.md`** — added **Jobs To Be Done** section for the Glob panel (grouped paths + git-scoped ideas from product discussion).
 
 ---
 
@@ -51,8 +55,8 @@ First full build session. Took the project from a standalone HTML animation to a
 
 **Custom right-click menu** (`context-menu.html`)
 - Replaced native OS context menu with custom HTML panel (required for hover events to reach shrine)
-- Greg row (grep) with Group 6 sprite icon — hover dims other row, shrine switches to Group 6
-- Glop row (glob) with Group 8 sprite icon — hover dims other row, shrine switches to Group 8
+- Greb row (`grep`) with Group 6 sprite icon — hover dims other row, shrine switches to Group 6
+- Glob row (`glob`) with Group 8 sprite icon — hover dims other row, shrine switches to Group 8
 - Muted system row: Always on Top toggle (reads live state) + Quit
 - Closes on blur (click outside)
 

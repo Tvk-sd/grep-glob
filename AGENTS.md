@@ -1,10 +1,10 @@
-# Agent Instructions — Greg & Glop
+# Agent Instructions — Greb & Glob
 
 Instructions for AI coding agents working on this project.
 
 ## Project Understanding
 
-You're working on a macOS desktop shrine app — two pixel-art characters (Greg & Glop) that float on screen. **Greg** opens a panel tied to **markdown tracker** + editor jumps; **Glop** opens a **glob** path finder. Users interact via right-click context menu, tray, and left-click Terminal at `~/Projects` on the shrine canvas.
+You're working on a macOS desktop shrine app — two pixel-art characters (Greb & Glob) that float on screen. **Greb** opens a panel tied to **markdown tracker** + editor jumps; **Glob** opens a **glob** path finder. Users interact via right-click context menu, tray, and left-click Terminal at `~/Projects` on the shrine canvas.
 
 ## Coding Conventions
 
@@ -30,15 +30,15 @@ docs/                   # Documentation
 - Renderer → Main: Request actions (`open-terminal`, `close-panel`)
 
 ### UI Consistency
-- **Greg panel**: glass stack (`rgba(18,18,18,0.88)` + `backdrop-filter: blur(20px)`) per `grep-panel.html`
-- **Glop panel**: minimal transparent chrome on `projects-panel.html` (still blur-to-close like other panels)
+- **Greb panel**: glass stack (`rgba(18,18,18,0.88)` + `backdrop-filter: blur(20px)`) per `grep-panel.html`
+- **Glob panel**: minimal transparent chrome on `projects-panel.html` (still blur-to-close like other panels)
 - **Panel positioning**: 8px right of shrine, computed from `win.getPosition()`
 - **Window constraints**: Shrine stays 200×200, panels are separate windows
 
 ## Development Workflow
 
 1. **Test frequently** — `npm start` to verify changes
-2. **Check both characters** — Greg (grep) and Glop (glob) behaviors
+2. **Check both characters** — Greb (`greb`) and Glob (`glob`) behaviors
 3. **Verify panel interactions** — Right-click menu, blur-to-close, positioning
 4. **Test IPC channels** — Ensure main ↔ renderer communication works
 
@@ -52,9 +52,9 @@ See `CLAUDE.md` for current bugs and technical debt.
 
 Use this when product or UI intent is fuzzy so implementation does not run ahead of the user’s mental model.
 
-### Invariants for *this* repo (Greg & Glop)
+### Invariants for *this* repo (Greb & Glob)
 
-- **One hero for the characters:** Greg & Glop live on the **shrine** canvas only. **Do not** add duplicate mascot sprites inside `grep-panel.html` or `projects-panel.html` unless the user explicitly asks for an exception.
+- **One hero for the characters:** Greb & Glob live on the **shrine** canvas only. **Do not** add duplicate mascot sprites inside `grep-panel.html` or `projects-panel.html` unless the user explicitly asks for an exception.
 - **Shrine state is canonical:** While a panel is open, `shrine-state` must stay coherent with that tool (grep vs glob); avoid “idle” or cross-tool frames from menu races or background IPC unless `main.js` already guards it.
 
 ### Before implementing UI, layout, or cross-window state
@@ -62,7 +62,7 @@ Use this when product or UI intent is fuzzy so implementation does not run ahead
 1. **One sentence:** “The user should *feel* ___; the wrong outcome looks like ___.” If the second half is blank, ask one clarifying question before coding.
 2. **Museum test:** In one glance, what is the **single focal object**? If there are two competing heroes (e.g. shrine + panel sprite), resolve which wins before shipping.
 3. **Screenshot habit:** When something looks wrong, prefer **screenshot + “I expected X, I see Y”** over a long prose bug report.
-4. **Spike boundary:** If trying an uncertain layout, name the **one rule** that would force a revert (e.g. “no second Glop image”).
+4. **Spike boundary:** If trying an uncertain layout, name the **one rule** that would force a revert (e.g. “no second Glob image”).
 5. **30-second grill:** Who is the hero? What must **not** change during scroll/focus/blur? What would embarrass us in a screen recording?
 
 ### First-message template (use or request from the user)

@@ -1,32 +1,32 @@
-# Reflection — Greg & Glop (spring 2026)
+# Reflection — Greb & Glob (spring 2026)
 
-Short retrospective after the Glop grouping / shrine lock / panel chrome / menu copy pass. Written for future us and anyone picking up the repo.
+Short retrospective after the Glob grouping / shrine lock / panel chrome / menu copy pass. Written for future us and anyone picking up the repo.
 
 ---
 
 ## What went well
 
 **Spatial grouping without new infrastructure**  
-Grouping Glop hits by the first folder under the search root and emphasizing path tails gave most of the “where does this live?” win in pure renderer logic—no new IPC, no git dependency. Cheap to ship, easy to reason about.
+Grouping Glob hits by the first folder under the search root and emphasizing path tails gave most of the “where does this live?” win in pure renderer logic—no new IPC, no git dependency. Cheap to ship, easy to reason about.
 
 **One source of truth for the characters**  
-Putting Greg and Glop **only on the shrine** (no duplicate sprites in the panels) tightened the product metaphor: the panels are tools; the shrine is the cast. It also avoided a second layout system to keep icons visible while scrolling.
+Putting Greb and Glob **only on the shrine** (no duplicate sprites in the panels) tightened the product metaphor: the panels are tools; the shrine is the cast. It also avoided a second layout system to keep icons visible while scrolling.
 
 **Shrine state became intentional, not accidental**  
 The flicker and wrong-frame issues traced to small, fixable causes: context menu `closed` racing `setShrineState('glob'|'grep')`, and `menu-hover(null)` idling the shrine between row hover and click. Deferred idle + explicit “idle on system row” + guards while a panel is open made behavior match user expectation with modest main-process logic.
 
 **Copy landed**  
-“grep whats next” / “glob it all up” matched the playful tone without changing wiring (`data-cmd` unchanged). Good reminder that low-risk string changes can disproportionately improve feel.
+“grep whats next” / “glob it all up” matched the playful tone without changing wiring (`data-cmd` unchanged). Good reminder that low-risk string changes can disproportionately improve feel. (Later renamed to **greb whats next** / **Glob** branding.)
 
 **JTBD in the concept doc**  
-Writing jobs for Glop (and the boundary with grep) turned vague “orientation in the tree” into testable language for the next iteration.
+Writing jobs for Glob (and the boundary with greb / content search) turned vague “orientation in the tree” into testable language for the next iteration.
 
 ---
 
 ## What went badly or took a detour
 
 **Misread intent once**  
-We added a Glop sprite column to match an assumed Greg-panel pattern; the user wanted the **opposite**—shrine stays on glob, **no** second icon. That was a product-listening miss: “static shrine” was clear in hindsight, “add an asset” was our default muscle.
+We added a Glob sprite column to match an assumed Greb-panel pattern; the user wanted the **opposite**—shrine stays on glob, **no** second icon. That was a product-listening miss: “static shrine” was clear in hindsight, “add an asset” was our default muscle.
 
 **CSS fought the path-tail design**  
 `text-overflow: ellipsis` on the whole `.rel` line clipped the **end**, so the “bold tail” never read until we split prefix vs tail with flex. Lesson: when the design is “keep the suffix visible,” the truncation model has to be explicit in layout, not only in string building.

@@ -1,4 +1,4 @@
-# Concept: Greg (grep) & Glop (glob)
+# Concept: Greb (`greb`) & Glob (`glob`)
 
 **Status:** Aligned with shipped app (see strategic brief)  
 **Canonical brief:** [`context/PROJECT-BRIEF.md`](../context/PROJECT-BRIEF.md)
@@ -7,38 +7,38 @@
 
 ## One-line pitch
 
-A floating **shrine** on macOS: **Glop** finds files by **path shape**; **Greg** pulls your **next work** from markdown and opens it in the editor—same desk, two different verbs.
+A floating **shrine** on macOS: **Glob** finds files by **path shape**; **Greb** pulls your **next work** from markdown and opens it in the editor—same desk, two different verbs.
 
 ---
 
 ## How the names map to the product today
 
-| | **Glop (glob / paths)** | **Greg (grep / content side)** |
+| | **Glob (`glob` / paths)** | **Greb (`greb` / content side)** |
 | --- | --- | --- |
-| **Menu label** | “glob - jump to project” | “grep - next from tracker” |
-| **Opens** | Glob panel: pattern + search root, live matches | Greg panel: queue from `PROJECT-TRACKER.md` |
+| **Menu label** | “glob it all up” | “greb whats next” |
+| **Opens** | Glob panel: pattern + search root, live matches | Greb panel: queue from `PROJECT-TRACKER.md` |
 | **Primary action** | Click row → copy **relative path**; ↗ → Terminal in that file’s folder | Click row → open **file at line** in Cursor / VS Code |
-| **Engine** | `mdfind` for plain names, `find` for `*` / `?` patterns (pruned noise dirs) | Parses `## Greg value — Active` → bullets under `### Now` / `### Next` / `### Later` (fallback: lone `### Next`) |
+| **Engine** | `mdfind` for plain names, `find` for `*` / `?` patterns (pruned noise dirs) | Parses `## Greb value — Active` → bullets under `### Now` / `### Next` / `### Later` (fallback: lone `### Next`) |
 
-The UI still speaks **glob** and **grep** so users never confuse “walk the tree” with “read the file.”
+The UI still speaks **`glob`** and **`greb`** so users never confuse “walk the tree” with “read the file.”
 
 ---
 
 ## The distinction (still the mental model)
 
-| | **Glob** | **Grep** |
+| | **Glob** | **Greb** |
 | --- | --- | --- |
 | **Matches** | Paths (names, folders) | Text inside files |
 | **Typical question** | “Which files live *here*, named like this?” | “Where is this string / what should I open next?” |
-| **In this app** | Glop panel | Greg panel (tracker queue; not a free-text project search in the current build) |
+| **In this app** | Glob panel | Greb panel (tracker queue; not a free-text project search in the current build) |
 
-**Mnemonic:** Glob walks the halls (paths). Grep reads the scrolls (contents). The shipped shrine encodes that split in two characters and two panels.
+**Mnemonic:** Glob walks the halls (paths). Greb reads the scrolls (contents). The shipped shrine encodes that split in two characters and two panels.
 
 ---
 
-## Glop panel: Jobs To Be Done
+## Glob panel: Jobs To Be Done
 
-Glop today: **glob or plain name** from a **chosen search root**; results **grouped by the top-level folder under that root**; each row shows a **truncated path prefix** plus an emphasized **path tail**; **click** copies the full **relative path**; **↗** opens **Terminal** in the hit’s directory. The jobs below assume that behavior.
+Glob today: **glob or plain name** from a **chosen search root**; results **grouped by the top-level folder under that root**; each row shows a **truncated path prefix** plus an emphasized **path tail**; **click** copies the full **relative path**; **↗** opens **Terminal** in the hit’s directory. The jobs below assume that behavior.
 
 ### When the root holds several repos (e.g. `~/Projects`)
 
@@ -66,9 +66,9 @@ Glop today: **glob or plain name** from a **chosen search root**; results **grou
 
 - **When** work is scoped to one client, product, or subtree, **I want to** set the search root there and glob deeply, **so I can** keep the result set small and have grouping mean “areas inside this scope,” not “every repo on disk.”
 
-### When Glop is the wrong hire (boundary job)
+### When Glob is the wrong hire (boundary job)
 
-- **When** my question is semantic (“where is auth implemented?” or “what calls this?”), **I want to** use **editor / content search** or **Greg’s queue and file jumps**, **so I can** answer meaning in the codebase instead of mistaking path matching for understanding.
+- **When** my question is semantic (“where is auth implemented?” or “what calls this?”), **I want to** use **editor / content search** or **Greb’s queue and file jumps**, **so I can** answer meaning in the codebase instead of mistaking path matching for understanding.
 
 ---
 
@@ -77,18 +77,18 @@ Glop today: **glob or plain name** from a **chosen search root**; results **grou
 - **Shrine window:** **200×200** when collapsed (transparent, **always on top**). **Right-click** the canvas (or **tray** right-click) opens the **custom context menu** to the right of the shrine’s **current** width (panels follow `getBounds().width`, not a fixed 208px offset).
 - **Left-drag** on the canvas moves the whole shrine (pointer capture + main `move-window` nudges open panels).
 - **Left tap** (no meaningful drag): expands the **same** `BrowserWindow` to about **560×420**, animates a slim **middle chrome bar** (drag strip + close **×**), and opens an **embedded** terminal (**xterm.js** in the renderer, **`node-pty`** in the main process) running **`claude`** with cwd **`~/Projects`**. Ending the session (**exit**, quitting Claude Code, or **×** / SIGTERM) disposes the PTY and **shrinks** the shrine back to 200×200. If `claude` is not on the Electron process **PATH**, spawn falls back to an interactive login shell in that directory (same cwd).
-- **Glop “Terminal in folder”** remains **macOS Terminal.app** via AppleScript (`openTerminalAtPath`) — only the shrine left-tap path is embedded.
-- **Context menu + Greg + Glop panels:** separate small windows, still **always on top**, positioned just right of the shrine. While you **drag the shrine**, open panels **stay visible** and **move with it** (main process nudges their position on each move). **Blur does not auto-dismiss** when focus simply lands on the shrine or back on the same panel—only after a tick, if focus is **elsewhere** (another app, etc.), so you can grab the shrine without the menu vanishing first.
+- **Glob “Terminal in folder”** remains **macOS Terminal.app** via AppleScript (`openTerminalAtPath`) — only the shrine left-tap path is embedded.
+- **Context menu + Greb + Glob panels:** separate small windows, still **always on top**, positioned just right of the shrine. While you **drag the shrine**, open panels **stay visible** and **move with it** (main process nudges their position on each move). **Blur does not auto-dismiss** when focus simply lands on the shrine or back on the same panel—only after a tick, if focus is **elsewhere** (another app, etc.), so you can grab the shrine without the menu vanishing first.
 - **Moving the menu itself:** the context menu window uses a **native drag region** (`-webkit-app-region: drag` on the menu chrome; **no-drag** on rows and system controls) so you can reposition it from gutters / padding while rows stay clickable.
 - **After a drag:** the shrine tells main to **refocus** whichever panel was open so the next click on a menu row or list item still lands without an extra focus tap.
-- **Greg** uses the dark **glass** panel; **Glop** uses the minimal transparent panel. **Login item** optional.
-- Main process still exposes **projects.json** IPC for a future pinned-list jumper; the **current** Glop surface is glob search, not pin management.
+- **Greb** uses the dark **glass** panel; **Glob** uses the minimal transparent panel. **Login item** optional.
+- Main process still exposes **projects.json** IPC for a future pinned-list jumper; the **current** Glob surface is glob search, not pin management.
 
 ---
 
 ## Success criteria (product)
 
-- A teammate can say what Greg does vs Glop **without** reading source.
+- A teammate can say what Greb does vs Glob **without** reading source.
 - Tracker bullets open the **correct** file and line; glob results copy **useful** paths and Terminal lands in the **right** directory.
 
 ---

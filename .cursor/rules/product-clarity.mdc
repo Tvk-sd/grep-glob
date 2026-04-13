@@ -13,6 +13,6 @@ When the user asks for UI, animation, or multi-window behavior without a tight s
 4. Uncertain spike: name **one revert rule** before building.
 5. State / scroll / blur: what must **stay stable**; what would fail a **screen recording**.
 
-**This repo:** Greg & Glop sprites stay on the **shrine** only (`index.html`); not in `grep-panel.html` / `projects-panel.html`. Shrine `shrine-state` must stay coherent with the open panel; do not reintroduce idle flicker from context menu or `menu-hover` without checking `main.js` guards.
+**This repo:** Greb & Glob sprites stay on the **shrine** only (`index.html`); not in `grep-panel.html` / `projects-panel.html`. Shrine `shrine-state` must stay coherent with the open panel; do not reintroduce idle flicker from context menu or `menu-hover` without checking `main.js` guards.
 
 Full narrative: `AGENTS.md` → **Product clarity (metaphor-first)**.

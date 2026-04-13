@@ -1,4 +1,4 @@
-# Nano Banana concept prompt: Glob & Grep shrine
+# Nano Banana concept prompt: Glob & Greb shrine
 
 Use with **Gemini image generation** (`gemini-3-pro-image-preview` / Nano Banana Pro). Paste the **Master prompt** into the image model; tune **Aspect ratio** and **resolution** as noted.
 
@@ -32,7 +32,7 @@ Icons: folder, document outline, asterisk path pattern.
 CENTER — largest panel, "Predict before reveal". A single focused stage: a
 pattern input field, a prominent button "Lock prediction", then a secondary
 "Reveal matches" state (show as subtle ghosted/disabled until ready). Bottom
-predella strip: thin status bar with monospace hint text "Glob = where · Grep =
+predella strip: thin status bar with monospace hint text "Glob = where · Greb =
 what".
 
 RIGHT WING — title "Content (inside files)". Stacked document panels with line
@@ -53,7 +53,7 @@ screens — stylized UI mockup suitable for a pitch deck.
 ```
 Wide triptych desktop UI mockup, navy background, gold accents. Left: file tree +
 grid of path tiles, label "Glob — paths". Center: large "predict then reveal"
-flow with two buttons. Right: code snippets with line highlights, label "Grep —
+flow with two buttons. Right: code snippets with line highlights, label "Greb —
 content". Modern flat design, framed panels, no people, no religious icons,
 high contrast, 16:9 concept art.
 ```

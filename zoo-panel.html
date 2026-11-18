@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 300px;
+      height: 360px;
+      background: transparent;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    #panel {
+      height: 100%;
+      background: transparent;
+      padding: 12px 14px 10px;
+      color: #000000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+    }
+    #title {
+      border-bottom: 1px solid #000000;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 2px 8px;
+      flex-shrink: 0;
+    }
+    #dir-label {
+      font-size: 11px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      padding: 2px 4px;
+      flex-shrink: 0;
+      transition: background 0.1s, color 0.1s;
+    }
+    #dir-label:hover { background: #000000; color: #ffffff; }
+    #status {
+      font-size: 11px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    #status.found { color: #2a7d00; }
+    #status.error { color: #c0392b; }
+    #results {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    #results::-webkit-scrollbar { width: 4px; }
+    #results::-webkit-scrollbar-track { background: transparent; }
+    #results::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
+    .home {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0.55;
+      padding: 8px 4px 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .agent {
+      padding: 6px 4px;
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+    }
+    .agent:hover { background: #000000; color: #ffffff; }
+    .agent .name {
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .agent .job {
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.35;
+      margin-top: 1px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .agent .meta {
+      font-size: 10px;
+      font-weight: 500;
+      margin-top: 2px;
+      opacity: 0.6;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .agent.broken .job { font-style: italic; opacity: 0.7; }
+    #hint {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.45);
+      text-align: center;
+      padding: 24px 0 0;
+      line-height: 1.7;
+    }
+    #hint code {
+      font-family: "SF Mono", Menlo, monospace;
+      font-size: 10px;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 1px 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <div id="title">the zoo</div>
+    <div id="dir-label" title="Click to scan another folder">~/Projects</div>
+    <div id="status"></div>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const dirLabel = document.getElementById('dir-label');
+    let scanDir = '';
+
+    function shortenPath(p) {
+      return String(p).replace(/^\/Users\/[^/]+/, '~');
+    }
+
+    function setStatus(text, cls) {
+      statusEl.textContent = text;
+      statusEl.className = cls || '';
+    }
+
+    function hint(html) {
+      resultsEl.innerHTML = '<div id="hint">' + html + '</div>';
+    }
+
+    function plural(n, word) {
+      return n + ' ' + word + (n === 1 ? '' : 's');
+    }
+
+    function metaLine(agent) {
+      const tools = agent.allTools
+        ? 'all tools'
+        : agent.tools.length ? agent.tools.join(', ') : 'no tools';
+      return agent.model ? tools + ' · ' + agent.model : tools;
+    }
+
+    function agentRow(agent) {
+      const row = document.createElement('div');
+      row.className = 'agent' + (agent.broken ? ' broken' : '');
+      row.title = 'Open ' + shortenPath(agent.path);
+
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = agent.name;
+
+      const job = document.createElement('div');
+      job.className = 'job';
+      job.textContent = agent.description || 'No description, so Claude cannot tell when to use it';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = metaLine(agent);
+
+      row.append(name, job, meta);
+      row.addEventListener('mousedown', (e) => e.preventDefault());
+      row.addEventListener('click', async () => {
+        try {
+          const r = await window.panelAPI.openFileAtLine(agent.path, 1, '');
+          if (!r || !r.ok) setStatus('Could not open file', 'error');
+        } catch {
+          setStatus('Could not open file', 'error');
+        }
+      });
+      return row;
+    }
+
+    async function scan() {
+      resultsEl.innerHTML = '';
+      setStatus('Looking for agents…', '');
+      let res;
+      try {
+        res = await window.panelAPI.scanAgents(scanDir);
+      } catch {
+        setStatus('Could not scan', 'error');
+        return;
+      }
+      const agents = Array.isArray(res && res.agents) ? res.agents : [];
+      if (res && res.root) {
+        dirLabel.textContent = shortenPath(res.root);
+        dirLabel.title = res.root + '\nClick to scan another folder';
+      }
+
+      if (!agents.length) {
+        if (res && res.error === 'missing-root') {
+          setStatus('Scan folder not found', 'error');
+          hint('Click the folder above to pick another one');
+        } else {
+          setStatus('No agents here yet', '');
+          hint('Agents live in <code>.claude/agents/*.md</code><br>inside a project, or in <code>~/.claude/agents</code>');
+        }
+        return;
+      }
+
+      const homes = new Set(agents.map((a) => a.home));
+      const where = res.error === 'missing-root' ? 'personal only, scan folder not found' : plural(homes.size, 'home');
+      setStatus(plural(agents.length, 'agent') + ' · ' + where + (res.capped ? ' · list capped' : ''), 'found');
+
+      let lastHome = null;
+      for (const agent of agents) {
+        if (agent.home !== lastHome) {
+          lastHome = agent.home;
+          const h = document.createElement('div');
+          h.className = 'home';
+          h.textContent = agent.home;
+          resultsEl.appendChild(h);
+        }
+        resultsEl.appendChild(agentRow(agent));
+      }
+    }
+
+    dirLabel.addEventListener('click', async () => {
+      try {
+        const picked = await window.panelAPI.zooPickDirectory();
+        if (!picked) return;
+        scanDir = picked;
+        scan();
+      } catch {
+        /* ignore */
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.panelAPI.closePanel();
+    });
+
+    scan();
+  </script>
+</body>
+</html>

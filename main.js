@@ -4,6 +4,7 @@ const { spawn, execFile } = require('child_process')
 const { homedir } = require('os')
 const fs = require('fs')
 const pty = require('node-pty')
+const { scanAgents } = require('./zoo')
 
 const PROJECTS_FILE = path.join(app.getPath('userData'), 'projects.json')
 const TRACKER_SCAN_ROOT_FILE = path.join(app.getPath('userData'), 'tracker-scan-root.txt')
@@ -248,7 +249,10 @@ let win, tray
 let contextMenuWin = null
 let grepWin = null
 let projectsWin = null
+let zooWin = null
 let grepBlurIgnoreUntil = 0
+/** True while the Zoo's folder picker is up, so its blur does not close the panel. */
+let zooPicking = false
 
 /** Embedded Claude terminal (shrine window). */
 let shrinePty = null
@@ -363,7 +367,7 @@ function attachDeferredBlurClose(panelWin, opts = {}) {
 
 function setShrineState(state) {
   if (win.isDestroyed()) return
-  const projectsOpen = projectsWin && !projectsWin.isDestroyed()
+  const projectsOpen = (projectsWin && !projectsWin.isDestroyed()) || (zooWin && !zooWin.isDestroyed())
   const grepOpen = grepWin && !grepWin.isDestroyed()
   if (state === 'idle' && (projectsOpen || grepOpen)) return
   if (projectsOpen && state !== 'glob' && state !== 'idle') return
@@ -381,12 +385,13 @@ function setShrineState(state) {
 }
 
 function closeAllPanels() {
-  [contextMenuWin, grepWin, projectsWin].forEach(w => {
+  [contextMenuWin, grepWin, projectsWin, zooWin].forEach(w => {
     if (w && !w.isDestroyed()) w.close()
   })
   contextMenuWin = null
   grepWin = null
   projectsWin = null
+  zooWin = null
 }
 
 /**
@@ -418,7 +423,7 @@ end tell`
 function createContextMenuWin() {
   closeAllPanels()
   const { x, y } = shrinePos()
-  const menuW = 220, menuH = 132
+  const menuW = 220, menuH = 166
   const bw = shrinePanelAnchorX()
   const bh = win && !win.isDestroyed() ? win.getBounds().height : SHRINE_COLLAPSED_H
   const menuX = x + bw + 8
@@ -428,7 +433,7 @@ function createContextMenuWin() {
   contextMenuWin.on('closed', () => {
     contextMenuWin = null
     setImmediate(() => {
-      if ((projectsWin && !projectsWin.isDestroyed()) || (grepWin && !grepWin.isDestroyed())) return
+      if ((projectsWin && !projectsWin.isDestroyed()) || (grepWin && !grepWin.isDestroyed()) || (zooWin && !zooWin.isDestroyed())) return
       setShrineState('idle')
     })
   })
@@ -467,6 +472,16 @@ function createProjectsWin() {
   projectsWin.on('closed', () => { projectsWin = null; setShrineState('idle') })
   projectsWin.on('focus', () => setShrineState('glob'))
   attachDeferredBlurClose(projectsWin)
+}
+
+function createZooWin() {
+  closeAllPanels()
+  const { x, y } = shrinePos()
+  zooWin = new BrowserWindow(panelConfig(300, 360, x + shrinePanelAnchorX() + 8, y))
+  zooWin.loadFile('zoo-panel.html')
+  zooWin.on('closed', () => { zooWin = null; setShrineState('idle') })
+  zooWin.on('focus', () => setShrineState('glob'))
+  attachDeferredBlurClose(zooWin, { extraStayOpen: () => zooPicking })
 }
 
 // ── App setup ─────────────────────────────────────────────────────────────────
@@ -512,6 +527,7 @@ ipcMain.on('move-window', (_e, x, y) => {
   nudgePanel(contextMenuWin)
   nudgePanel(grepWin)
   nudgePanel(projectsWin)
+  nudgePanel(zooWin)
 })
 
 ipcMain.on('shrine-drag-ended', (_e, didDrag) => {
@@ -519,6 +535,7 @@ ipcMain.on('shrine-drag-ended', (_e, didDrag) => {
   if (contextMenuWin && !contextMenuWin.isDestroyed()) contextMenuWin.focus()
   else if (grepWin && !grepWin.isDestroyed()) grepWin.focus()
   else if (projectsWin && !projectsWin.isDestroyed()) projectsWin.focus()
+  else if (zooWin && !zooWin.isDestroyed()) zooWin.focus()
 })
 
 ipcMain.on('open-terminal', () => {
@@ -591,6 +608,7 @@ ipcMain.on('menu-select', (_e, command) => {
   if (!contextMenuWin?.isDestroyed()) { contextMenuWin.close(); contextMenuWin = null }
   if (command === 'grep') { setShrineState('grep'); createGrepWin() }
   else if (command === 'glob') { setShrineState('glob'); createProjectsWin() }
+  else if (command === 'zoo') { setShrineState('glob'); createZooWin() }
   else if (command === 'toggle-top') win.setAlwaysOnTop(!win.isAlwaysOnTop())
   else if (command === 'quit') app.quit()
 })
@@ -868,6 +886,30 @@ ipcMain.handle('run-glob', (_e, pattern, dir) => {
       (_err, stdout) => resolve({ files: toFiles(stdout), error: null })
     )
   })
+})
+
+
+// ── IPC: zoo panel ────────────────────────────────────────────────────────────
+
+/** Read-only: list Claude Code subagents under `dir` (default ~/Projects) plus ~/.claude/agents. */
+ipcMain.handle('scan-agents', (_e, dir) => {
+  const root = typeof dir === 'string' && dir.trim() ? dir : path.join(homedir(), 'Projects')
+  try {
+    return scanAgents(root)
+  } catch (err) {
+    return { error: 'scan-failed', root, agents: [], capped: false, message: String(err && err.message) }
+  }
+})
+
+ipcMain.handle('zoo-pick-directory', async () => {
+  zooPicking = true
+  try {
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    return result.canceled ? null : result.filePaths[0]
+  } finally {
+    zooPicking = false
+    if (zooWin && !zooWin.isDestroyed()) zooWin.focus()
+  }
 })
 
 

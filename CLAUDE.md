@@ -23,6 +23,9 @@ index.html            — Shrine: canvas animation, badge, drag, click, context 
 context-menu.html     — Custom right-click menu (Greg/Glop rows + system row)
 grep-panel.html       — Greg panel: queue from `context/PROJECT-TRACKER.md` (Now / Next / Later), open file at line in editor
 projects-panel.html   — Glop panel: glob pattern + search root, live matches, copy relative path, Terminal in hit folder
+zoo-panel.html        — Zoo panel: every Claude Code subagent under ~/Projects + ~/.claude/agents, with its job, tools, model; click opens the file
+zoo.js                — Zoo scanner (pure Node, no Electron): walks for `.claude/agents/*.md`, reads frontmatter
+.claude/agents/       — Greg (`greg.md`, Grep + Read) and Glop (`glop.md`, Glob only) as real Claude Code subagents
 assets/               — Sprite PNGs (Group 5–10.png) + tray-icon.png
 docs/                 — Concept docs and research
 ```
@@ -72,6 +75,8 @@ docs/                 — Concept docs and research
 | `add-project` | panel → main | Add + save (no panel UI yet) |
 | `remove-project` | panel → main | Remove by id + save (no panel UI yet) |
 | `open-project` | panel → main | Open Terminal at directory (Glop ↗, plus menu flows) |
+| `scan-agents` | panel → main | Zoo: list subagents under a folder (default `~/Projects`) plus `~/.claude/agents`; read-only |
+| `zoo-pick-directory` | panel → main | Zoo: folder picker that keeps the panel open while the dialog is up |
 
 ## Known bugs (see `context/PROJECT-TRACKER.md` → Later / Resume)
 1. **Context menu** — design/centering needs rework
@@ -84,4 +89,5 @@ docs/                 — Concept docs and research
 - **Blur-to-close** — Panels close on blur, be careful with dialogs triggering premature blur
 - **Preload separation** — `panel-preload.js` for panels, `preload.js` for shrine only
 - **Greg panel chrome** — glass: `rgba(18,18,18,0.88)` + `backdrop-filter: blur(20px)` + light border (`grep-panel.html`)
+- **Zoo is read-only** — it lists and opens agent files, never edits or deletes; shrine shows `glob` while it is open. Planned next: a sessions tab (local `~/.claude/projects` transcripts), also read-only
 - **Glop panel chrome** — transparent window, high-contrast black type (no glass stack on `projects-panel.html`); keep blur-to-close behavior consistent with other panels

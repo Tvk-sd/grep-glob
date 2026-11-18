@@ -35,4 +35,8 @@ contextBridge.exposeInMainWorld('panelAPI', {
   openProject:       (dirPath)      => ipcRenderer.send('open-project', dirPath),
   copyToClipboard:   (text)         => ipcRenderer.send('copy-to-clipboard', text),
   runGlob:           (pattern, dir) => ipcRenderer.invoke('run-glob', pattern, dir),
+
+  // zoo panel
+  scanAgents:        (dir)          => ipcRenderer.invoke('scan-agents', dir),
+  zooPickDirectory:  ()             => ipcRenderer.invoke('zoo-pick-directory'),
 })
